@@ -1,0 +1,77 @@
+# ====================
+# Gradle files
+# ====================
+.gradle/
+build/
+out/
+captures/
+
+# ====================
+# Android Studio / IntelliJ IDEA
+# ====================
+*.iml
+.idea/
+!idea/
+!.idea/modules.xml
+!.idea/runConfigurations/
+.idea/caches/
+.idea/libraries/
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/jarRepositories.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/misc.xml
+.idea/vcs.xml
+.idea/compiler.xml
+.idea/deploymentTargetSelector.xml
+
+# ====================
+# Local configuration files
+# ====================
+local.properties
+*.keystore
+*.jks
+*.p12
+*.bks
+
+# ====================
+# Compiled files
+# ====================
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+
+# ====================
+# System files
+# ====================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+*.tmp
+
+# ====================
+# Logs
+# ====================
+*.log
+logs/
+
+# ====================
+# NDK
+# ====================
+*.so
+.externalNativeBuild/
+.cxx/
+
+# ====================
+# Fastlane
+# ====================
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
