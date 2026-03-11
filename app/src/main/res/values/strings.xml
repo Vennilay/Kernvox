@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">Kernvox</string>
+
+    <string name="home_welcome_title">Добро пожаловать!</string>
+    <string name="home_description_line_1">Kernvox — приложение для системных администраторов.</string>
+    <string name="home_description_line_2">Подключайтесь к серверам и получайте базовую статистику и состояние.</string>
+    <string name="home_open_app_button">Открыть приложение</string>
+
+    <string name="servers_title">Серверы</string>
+    <string name="servers_empty_title">Пока серверов нет</string>
+    <string name="servers_empty_subtitle">Здесь будет список добавленных серверов и их статус.</string>
+    <string name="servers_add_button">Добавить сервер</string>
+
+    <string name="servers_add_soon_snackbar">Добавление сервера — скоро</string>
 </resources>
