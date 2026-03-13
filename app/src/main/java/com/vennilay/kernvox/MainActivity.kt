@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,6 +28,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,7 +42,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import com.vennilay.kernvox.ui.theme.KernvoxTheme
+import com.vennilay.kernvox.viewmodel.ServersViewModel
 import kotlinx.coroutines.launch
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -114,6 +120,9 @@ private fun ServersScreen(
     onAddServer: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val serversViewModel: ServersViewModel = viewModel()
+    val servers by serversViewModel.servers.collectAsState()
+
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val addServerSoonMessage = stringResource(R.string.servers_add_soon_snackbar)
@@ -141,11 +150,31 @@ private fun ServersScreen(
                     .widthIn(max = 600.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Card {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = stringResource(R.string.servers_empty_title))
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(text = stringResource(R.string.servers_empty_subtitle))
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(
+                        items = servers,
+                        key = { it.id },
+                    ) { server ->
+                        Card {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(text = server.name, fontWeight = FontWeight.SemiBold)
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(text = "${server.host}:${server.port}")
+                                Spacer(modifier = Modifier.height(6.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(text = "Статус")
+                                    Text(text = if (server.isAvailable) "Онлайн" else "Оффлайн")
+                                }
+                            }
+                        }
                     }
                 }
 
