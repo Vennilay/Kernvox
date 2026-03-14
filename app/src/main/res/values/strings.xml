@@ -9,6 +9,9 @@
     <string name="servers_title">Серверы</string>
     <string name="servers_empty_title">Пока серверов нет</string>
     <string name="servers_empty_subtitle">Здесь будет список добавленных серверов и их статус.</string>
+    <string name="servers_status_label">Статус</string>
+    <string name="servers_status_online">Онлайн</string>
+    <string name="servers_status_offline">Оффлайн</string>
     <string name="servers_add_button">Добавить сервер</string>
 
     <string name="servers_add_soon_snackbar">Добавление сервера — скоро</string>
