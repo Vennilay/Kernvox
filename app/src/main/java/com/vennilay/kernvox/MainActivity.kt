@@ -126,6 +126,9 @@ private fun ServersScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val addServerSoonMessage = stringResource(R.string.servers_add_soon_snackbar)
+    val statusLabel = stringResource(R.string.servers_status_label)
+    val onlineStatus = stringResource(R.string.servers_status_online)
+    val offlineStatus = stringResource(R.string.servers_status_offline)
 
     BackHandler(onBack = onNavigateBack)
 
@@ -170,8 +173,8 @@ private fun ServersScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Text(text = "Статус")
-                                    Text(text = if (server.isAvailable) "Онлайн" else "Оффлайн")
+                                    Text(text = statusLabel)
+                                    Text(text = if (server.isAvailable) onlineStatus else offlineStatus)
                                 }
                             }
                         }
