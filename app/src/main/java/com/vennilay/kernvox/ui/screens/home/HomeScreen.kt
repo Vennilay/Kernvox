@@ -34,6 +34,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vennilay.kernvox.R
+import com.vennilay.kernvox.ui.components.IconCircle
 import com.vennilay.kernvox.ui.components.KernvoxButton
 import com.vennilay.kernvox.ui.theme.KernvoxTheme
 
@@ -212,20 +213,11 @@ private fun FeatureItem(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(icon),
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        }
+        IconCircle(
+            icon = icon,
+            containerSize = 36,
+            iconSize = 18
+        )
 
         Spacer(modifier = Modifier.width(12.dp))
 

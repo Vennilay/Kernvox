@@ -26,3 +26,22 @@ fun formatUptime(seconds: Long): String {
         }
     }.trim()
 }
+
+/**
+ * Форматирует время последней проверки в читаемый формат.
+ *
+ * @param epochMillis Время в миллисекундах (epoch)
+ * @return Отформатированная строка (например, "Только что", "5 мин. назад")
+ */
+fun formatLastChecked(epochMillis: Long): String {
+    val now = System.currentTimeMillis()
+    val diffMillis = now - epochMillis
+    val diffSeconds = diffMillis / 1000
+
+    return when {
+        diffSeconds < 60 -> "Только что"
+        diffSeconds < 3600 -> "${diffSeconds / 60} мин. назад"
+        diffSeconds < 86400 -> "${diffSeconds / 3600} ч. назад"
+        else -> "${diffSeconds / 86400} дн. назад"
+    }
+}

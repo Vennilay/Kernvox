@@ -1,8 +1,6 @@
 package com.vennilay.kernvox.ui.screens.serverDetail
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,10 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -39,8 +35,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vennilay.kernvox.R
 import com.vennilay.kernvox.data.model.Server
+import com.vennilay.kernvox.ui.components.IconCircle
 import com.vennilay.kernvox.ui.components.StatusBadge
 import com.vennilay.kernvox.ui.theme.KernvoxTheme
+import com.vennilay.kernvox.ui.utils.formatLastChecked
 import com.vennilay.kernvox.ui.utils.formatUptime
 
 /**
@@ -162,20 +160,11 @@ private fun ServerHeader(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Иконка сервера
-        Box(
-            modifier = Modifier
-                .size(80.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_server_placeholder),
-                contentDescription = null,
-                modifier = Modifier.size(40.dp),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        }
+        IconCircle(
+            icon = R.drawable.ic_server_placeholder,
+            containerSize = 80,
+            iconSize = 40
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -217,20 +206,7 @@ private fun DetailTile(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(icon),
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
+            IconCircle(icon = icon)
 
             Spacer(modifier = Modifier.width(16.dp))
 
@@ -249,23 +225,6 @@ private fun DetailTile(
                 )
             }
         }
-    }
-}
-
-/**
- * Форматирование времени последней проверки.
- */
-@Composable
-private fun formatLastChecked(epochMillis: Long): String {
-    val now = System.currentTimeMillis()
-    val diffMillis = now - epochMillis
-    val diffSeconds = diffMillis / 1000
-
-    return when {
-        diffSeconds < 60 -> "Только что"
-        diffSeconds < 3600 -> "${diffSeconds / 60} мин. назад"
-        diffSeconds < 86400 -> "${diffSeconds / 3600} ч. назад"
-        else -> "${diffSeconds / 86400} дн. назад"
     }
 }
 
