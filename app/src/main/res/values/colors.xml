@@ -1,5 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Primary colors -->
+    <color name="blue_primary">#FF2563EB</color>
+    <color name="blue_primary_variant">#FF1D4ED8</color>
+    
+    <!-- Secondary colors -->
+    <color name="teal_secondary">#FF14B8A6</color>
+    <color name="teal_secondary_variant">#FF0D9488</color>
+    
+    <!-- Error colors -->
+    <color name="red_error">#FFEF4444</color>
+    <color name="red_error_variant">#FFDC2626</color>
+    
+    <!-- Success colors -->
+    <color name="green_success">#FF22C55E</color>
+    <color name="green_success_variant">#FF16A34A</color>
+    
+    <!-- Warning colors -->
+    <color name="amber_warning">#FFF59E0B</color>
+    <color name="amber_warning_variant">#FFD97706</color>
+    
+    <!-- Background colors -->
+    <color name="light_background">#FFF8FAFC</color>
+    <color name="light_surface">#FFFFFFFF</color>
+    <color name="dark_background">#FF0F172A</color>
+    <color name="dark_surface">#FF1E293B</color>
+    
+    <!-- Legacy support -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>

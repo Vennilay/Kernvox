@@ -1,18 +1,40 @@
 <resources>
     <string name="app_name">Kernvox</string>
 
-    <string name="home_welcome_title">Добро пожаловать!</string>
-    <string name="home_description_line_1">Kernvox — приложение для системных администраторов.</string>
-    <string name="home_description_line_2">Подключайтесь к серверам и получайте базовую статистику и состояние.</string>
-    <string name="home_open_app_button">Открыть приложение</string>
+    <!-- Home Screen -->
+    <string name="home_welcome_title">Добро пожаловать\ в Kernvox</string>
+    <string name="home_subtitle">Ваш персональный помощник\nдля мониторинга серверов</string>
+    <string name="home_description_line_1">Kernvox — современное приложение для системных администраторов и DevOps-инженеров.</string>
+    <string name="home_description_line_2">Подключайтесь к серверам, отслеживайте их статус и получайте актуальную статистику в реальном времени.</string>
+    <string name="home_features_title">Возможности:</string>
+    <string name="home_feature_monitoring">Мониторинг статуса серверов</string>
+    <string name="home_feature_uptime">Отслеживание аптайма</string>
+    <string name="home_feature_quickview">Быстрый обзор инфраструктуры</string>
+    <string name="home_open_app_button">Перейти к серверам</string>
 
+    <!-- Servers Screen -->
     <string name="servers_title">Серверы</string>
-    <string name="servers_empty_title">Пока серверов нет</string>
-    <string name="servers_empty_subtitle">Здесь будет список добавленных серверов и их статус.</string>
+    <string name="servers_empty_title">Список серверов пуст</string>
+    <string name="servers_empty_subtitle">Добавьте первый сервер для начала мониторинга</string>
     <string name="servers_status_label">Статус</string>
     <string name="servers_status_online">Онлайн</string>
     <string name="servers_status_offline">Оффлайн</string>
     <string name="servers_add_button">Добавить сервер</string>
-
     <string name="servers_add_soon_snackbar">Добавление сервера — скоро</string>
+    <string name="servers_uptime_label">Аптайм</string>
+    <string name="servers_last_checked_label">Проверен</string>
+
+    <!-- Server Card -->
+    <string name="server_card_host_label">Хост</string>
+    <string name="server_card_uptime_label">Время работы</string>
+    <string name="server_card_last_check_label">Последняя проверка</string>
+
+    <!-- Server Detail Screen -->
+    <string name="back_button">Назад</string>
+    <string name="server_detail_main_info">Основная информация</string>
+    <string name="server_detail_address">Адрес</string>
+    <string name="server_detail_id">ID сервера</string>
+    <string name="server_detail_status">Статус</string>
+    <string name="server_detail_uptime">Аптайм</string>
+    <string name="server_detail_last_checked">Последняя проверка</string>
 </resources>
