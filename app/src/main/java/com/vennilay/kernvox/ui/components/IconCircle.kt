@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -15,13 +16,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 
 /**
- * Универсальный компонент для отображения иконки в круглом контейнере.
+ * Универсальный компонент для отображения иконки в контейнере.
  *
  * @param icon Ресурс иконки для отображения
  * @param modifier Модификатор для компонента
  * @param containerColor Цвет фона контейнера
  * @param iconColor Цвет иконки
- * @param size Размер иконки (по умолчанию 40.dp для контейнера, 20.dp для иконки)
+ * @param containerSize Размер контейнера в dp
+ * @param iconSize Размер иконки в dp
+ * @param rounded Если true — круглый контейнер, если false — квадратный с закруглением
  */
 @Composable
 fun IconCircle(
@@ -30,12 +33,19 @@ fun IconCircle(
     containerColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primaryContainer,
     iconColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onPrimaryContainer,
     containerSize: Int = 40,
-    iconSize: Int = 20
+    iconSize: Int = 20,
+    rounded: Boolean = false
 ) {
+    val shape = if (rounded) {
+        CircleShape
+    } else {
+        MaterialTheme.shapes.small
+    }
+
     Box(
         modifier = modifier
             .size(containerSize.dp)
-            .clip(CircleShape)
+            .clip(shape)
             .background(containerColor),
         contentAlignment = Alignment.Center
     ) {
@@ -49,12 +59,15 @@ fun IconCircle(
 }
 
 /**
- * Универсальный компонент для отображения иконки в круглом контейнере с ImageVector.
+ * Универсальный компонент для отображения иконки в контейнере с ImageVector.
  *
  * @param icon ImageVector иконки для отображения
  * @param modifier Модификатор для компонента
  * @param containerColor Цвет фона контейнера
  * @param iconColor Цвет иконки
+ * @param containerSize Размер контейнера в dp
+ * @param iconSize Размер иконки в dp
+ * @param rounded Если true — круглый контейнер, если false — квадратный с закруглением
  */
 @Composable
 fun IconCircle(
@@ -63,12 +76,19 @@ fun IconCircle(
     containerColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primaryContainer,
     iconColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onPrimaryContainer,
     containerSize: Int = 40,
-    iconSize: Int = 20
+    iconSize: Int = 20,
+    rounded: Boolean = false
 ) {
+    val shape = if (rounded) {
+        CircleShape
+    } else {
+        MaterialTheme.shapes.small
+    }
+
     Box(
         modifier = modifier
             .size(containerSize.dp)
-            .clip(CircleShape)
+            .clip(shape)
             .background(containerColor),
         contentAlignment = Alignment.Center
     ) {

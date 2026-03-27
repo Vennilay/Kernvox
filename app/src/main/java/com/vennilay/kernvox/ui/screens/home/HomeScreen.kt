@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -70,7 +69,12 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 // Логотип/Иконка приложения
-                AppIcon()
+                IconCircle(
+                    icon = R.drawable.ic_server_placeholder,
+                    containerSize = 120,
+                    iconSize = 60,
+                    rounded = true
+                )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -98,7 +102,7 @@ fun HomeScreen(
                 // Кнопка
                 KernvoxButton(
                     onClick = onOpenApp,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.widthIn(max = 400.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -120,26 +124,6 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
-    }
-}
-
-@Composable
-private fun AppIcon() {
-    Box(
-        modifier = Modifier
-            .size(120.dp)
-            .clip(CircleShape)
-            .background(
-                MaterialTheme.colorScheme.primaryContainer
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_server_placeholder),
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colorScheme.onPrimaryContainer
-        )
     }
 }
 
@@ -216,7 +200,8 @@ private fun FeatureItem(
         IconCircle(
             icon = icon,
             containerSize = 36,
-            iconSize = 18
+            iconSize = 18,
+            rounded = false
         )
 
         Spacer(modifier = Modifier.width(12.dp))

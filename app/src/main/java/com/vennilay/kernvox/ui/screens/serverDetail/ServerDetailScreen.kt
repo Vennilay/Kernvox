@@ -1,20 +1,16 @@
 package com.vennilay.kernvox.ui.screens.serverDetail
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.vennilay.kernvox.R
 import com.vennilay.kernvox.data.model.Server
 import com.vennilay.kernvox.ui.components.IconCircle
+import com.vennilay.kernvox.ui.components.InfoTile
 import com.vennilay.kernvox.ui.components.StatusBadge
 import com.vennilay.kernvox.ui.theme.KernvoxTheme
 import com.vennilay.kernvox.ui.utils.formatLastChecked
@@ -85,7 +82,7 @@ fun ServerDetailScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             // Плитка: Адрес
-            DetailTile(
+            InfoTile(
                 label = "Адрес",
                 value = "${server.host}:${server.port}",
                 icon = R.drawable.ic_location
@@ -94,7 +91,7 @@ fun ServerDetailScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Плитка: ID сервера
-            DetailTile(
+            InfoTile(
                 label = "ID сервера",
                 value = server.id,
                 icon = R.drawable.ic_server_placeholder
@@ -103,7 +100,7 @@ fun ServerDetailScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Плитка: Аптайм
-            DetailTile(
+            InfoTile(
                 label = "Аптайм",
                 value = formatUptime(server.uptimeSeconds),
                 icon = R.drawable.ic_uptime
@@ -112,7 +109,7 @@ fun ServerDetailScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Плитка: Последняя проверка
-            DetailTile(
+            InfoTile(
                 label = "Последняя проверка",
                 value = formatLastChecked(server.lastCheckedAtEpochMillis),
                 icon = R.drawable.ic_quickview
@@ -130,7 +127,7 @@ private fun ServerDetailTopAppBar(
     TopAppBar(
         title = {
             Text(
-                text = stringResource(R.string.back_button),
+                text = "Детали сервера",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold
             )
@@ -163,7 +160,8 @@ private fun ServerHeader(
         IconCircle(
             icon = R.drawable.ic_server_placeholder,
             containerSize = 80,
-            iconSize = 40
+            iconSize = 40,
+            rounded = true
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -180,51 +178,6 @@ private fun ServerHeader(
 
         // Бейдж статуса
         StatusBadge(isOnline = server.isAvailable)
-    }
-}
-
-/**
- * Универсальная плитка для отображения информации.
- */
-@Composable
-private fun DetailTile(
-    label: String,
-    value: String,
-    icon: Int
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconCircle(icon = icon)
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = value,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        }
     }
 }
 
