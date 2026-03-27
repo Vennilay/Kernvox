@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 private val DarkColorScheme = darkColorScheme(
     primary = BluePrimary,
@@ -100,8 +101,11 @@ fun KernvoxTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = Color.Transparent.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            WindowInsetsControllerCompat(window, view).let { controller ->
+                controller.isAppearanceLightStatusBars = !darkTheme
+                controller.isAppearanceLightNavigationBars = !darkTheme
+            }
         }
     }
 
