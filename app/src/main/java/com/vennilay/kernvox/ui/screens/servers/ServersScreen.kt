@@ -54,12 +54,14 @@ import kotlinx.coroutines.launch
  * Экран отображения списка серверов с возможностью добавления новых.
  *
  * @param onNavigateBack Обработчик навигации назад
+ * @param onServerClick Обработчик нажатия на сервер (открытие деталей)
  * @param modifier Модификатор для компонента
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServersScreen(
     onNavigateBack: () -> Unit,
+    onServerClick: (Server) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val serversViewModel: ServersViewModel = viewModel()
@@ -124,7 +126,8 @@ fun ServersScreen(
                     key = { it.id }
                 ) { server ->
                     ServerCard(
-                        server = server
+                        server = server,
+                        onClick = onServerClick
                     )
                 }
 
@@ -200,7 +203,8 @@ private fun ServersFab(
 private fun ServersScreenPreview() {
     KernvoxTheme {
         ServersScreen(
-            onNavigateBack = {}
+            onNavigateBack = {},
+            onServerClick = {}
         )
     }
 }

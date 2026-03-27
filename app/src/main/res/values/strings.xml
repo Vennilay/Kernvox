@@ -28,4 +28,13 @@
     <string name="server_card_host_label">Хост</string>
     <string name="server_card_uptime_label">Время работы</string>
     <string name="server_card_last_check_label">Последняя проверка</string>
+
+    <!-- Server Detail Screen -->
+    <string name="back_button">Назад</string>
+    <string name="server_detail_main_info">Основная информация</string>
+    <string name="server_detail_address">Адрес</string>
+    <string name="server_detail_id">ID сервера</string>
+    <string name="server_detail_status">Статус</string>
+    <string name="server_detail_uptime">Аптайм</string>
+    <string name="server_detail_last_checked">Последняя проверка</string>
 </resources>

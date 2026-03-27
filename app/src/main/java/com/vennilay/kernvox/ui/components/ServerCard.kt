@@ -33,13 +33,13 @@ import com.vennilay.kernvox.ui.utils.formatUptime
  *
  * @param server Данные сервера для отображения
  * @param modifier Модификатор для компонента
- * @param onClick Обработчик нажатия на карточку (опционально)
+ * @param onClick Обработчик нажатия на карточку (опционально), передаёт сервер
  */
 @Composable
 fun ServerCard(
     server: Server,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null
+    onClick: ((Server) -> Unit)? = null
 ) {
     Card(
         modifier = modifier
@@ -49,7 +49,7 @@ fun ServerCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        onClick = { onClick?.invoke() }
+        onClick = { onClick?.invoke(server) }
     ) {
         Column(
             modifier = Modifier
