@@ -123,7 +123,8 @@ fun ServersScreen(
             ) {
                 items(
                     items = servers,
-                    key = { it.id }
+                    key = { it.id },
+                    contentType = { "server_card" }
                 ) { server ->
                     ServerCard(
                         server = server,

@@ -27,22 +27,16 @@ fun StatusBadge(
     isOnline: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = if (isOnline) {
-        MaterialTheme.colorScheme.primaryContainer
-    } else {
-        MaterialTheme.colorScheme.errorContainer
+    val backgroundColor = MaterialTheme.colorScheme.run {
+        if (isOnline) primaryContainer else errorContainer
     }
 
-    val textColor = if (isOnline) {
-        MaterialTheme.colorScheme.onPrimaryContainer
-    } else {
-        MaterialTheme.colorScheme.onErrorContainer
+    val textColor = MaterialTheme.colorScheme.run {
+        if (isOnline) onPrimaryContainer else onErrorContainer
     }
 
-    val indicatorColor = if (isOnline) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.error
+    val indicatorColor = MaterialTheme.colorScheme.run {
+        if (isOnline) primary else error
     }
 
     val statusText = if (isOnline) "Онлайн" else "Оффлайн"

@@ -1,5 +1,7 @@
 package com.vennilay.kernvox.ui.screens.serverDetail
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -52,6 +54,9 @@ fun ServerDetailScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Перехват системной кнопки "Назад" (жест/swipe)
+    BackHandler(onBack = onNavigateBack)
+
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     Scaffold(
@@ -125,19 +130,25 @@ private fun ServerDetailTopAppBar(
     scrollBehavior: androidx.compose.material3.TopAppBarScrollBehavior
 ) {
     TopAppBar(
-        title = {
-            Text(
-                text = "Детали сервера",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-        },
+        title = { },
         navigationIcon = {
-            IconButton(onClick = onNavigateBack) {
+            Row(
+                modifier = Modifier
+                    .clickable(onClick = onNavigateBack)
+                    .padding(horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_back),
-                    contentDescription = stringResource(R.string.back_button),
+                    contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "Назад",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         },
