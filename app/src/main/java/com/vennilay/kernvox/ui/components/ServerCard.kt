@@ -13,13 +13,13 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vennilay.kernvox.R
 import com.vennilay.kernvox.data.model.Server
-import com.vennilay.kernvox.ui.components.IconCircle
 import com.vennilay.kernvox.ui.utils.formatLastChecked
 import com.vennilay.kernvox.ui.utils.formatUptime
 
@@ -36,6 +36,14 @@ fun ServerCard(
     modifier: Modifier = Modifier,
     onClick: ((Server) -> Unit)? = null
 ) {
+    // Кэшируем результаты форматирования для оптимизации производительности
+    val uptimeFormatted = remember(server.uptimeSeconds) {
+        formatUptime(server.uptimeSeconds)
+    }
+    val lastCheckedFormatted = remember(server.lastCheckedAtEpochMillis) {
+        formatLastChecked(server.lastCheckedAtEpochMillis)
+    }
+
     Card(
         modifier = modifier
             .fillMaxWidth(),
@@ -121,7 +129,7 @@ fun ServerCard(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = formatUptime(server.uptimeSeconds),
+                        text = uptimeFormatted,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurface
@@ -137,7 +145,7 @@ fun ServerCard(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = formatLastChecked(server.lastCheckedAtEpochMillis),
+                        text = lastCheckedFormatted,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurface

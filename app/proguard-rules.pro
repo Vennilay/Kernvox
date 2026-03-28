@@ -14,8 +14,41 @@
 
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+-keepattributes SourceFile,LineNumberTable
 
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
-#-renamesourcefileattribute SourceFile
+-renamesourcefileattribute SourceFile
+
+# Keep data models for serialization
+-keep class com.vennilay.kernvox.data.model.** { *; }
+-keep class com.vennilay.kernvox.ui.state.** { *; }
+
+# Keep Kotlin serialization
+-keepattributes *Annotation*, InnerClasses
+-dontnote kotlinx.serialization.AnnotationsKt
+-keepclassmembers class kotlinx.serialization.json.** {
+    *** Companion;
+}
+-keepclasseswithmembers class kotlinx.serialization.json.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+
+# Keep Compose stability annotations
+-keep class androidx.compose.runtime.Stable { *; }
+
+# Keep ViewModel
+-keep class * extends androidx.lifecycle.ViewModel { *; }
+
+# Keep Kotlin Coroutines
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keepclassmembers class kotlinx.coroutines.** {
+    volatile <fields>;
+}
+
+# Keep Ktor client (for future use)
+-keep class io.ktor.** { *; }
+-dontwarn io.ktor.**
+-keep class okhttp3.** { *; }
+-dontwarn okhttp3.**
