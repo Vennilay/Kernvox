@@ -1,54 +1,68 @@
 package com.vennilay.kernvox.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.vennilay.kernvox.data.model.Server
-import com.vennilay.kernvox.data.repository.FakeServersRepository
+import com.vennilay.kernvox.data.network.HttpClientFactory
+import com.vennilay.kernvox.data.network.KernvoxApiService
+import com.vennilay.kernvox.data.repository.ApiServersRepository
 import com.vennilay.kernvox.data.repository.ServersRepository
+import com.vennilay.kernvox.data.storage.AppSettingsRepository
 import com.vennilay.kernvox.ui.state.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-/**
- * ViewModel для управления состоянием экрана серверов.
- * Использует единый UiState для предотвращения рассинхронизации состояний.
- */
 class ServersViewModel(
-    private val serversRepository: ServersRepository = FakeServersRepository(),
-) : ViewModel() {
+    application: Application,
+) : AndroidViewModel(application) {
+
+    private val settingsRepository = AppSettingsRepository(application)
+    private lateinit var serversRepository: ServersRepository
 
     private val _uiState = MutableStateFlow<UiState<List<Server>>>(UiState.Loading)
     val uiState: StateFlow<UiState<List<Server>>> = _uiState.asStateFlow()
 
-    // Удобный доступ к данным серверов для обратной совместимости
     private val _servers = MutableStateFlow<List<Server>>(emptyList())
     val servers: StateFlow<List<Server>> = _servers.asStateFlow()
 
+    private val _isConfigured = MutableStateFlow(false)
+    val isConfigured: StateFlow<Boolean> = _isConfigured.asStateFlow()
+
     init {
-        loadServers()
+        initRepository()
+    }
+
+    private fun initRepository() {
+        viewModelScope.launch {
+            val settings = settingsRepository.settings.first()
+            val hasConfig = settings.serverUrl.isNotBlank() && settings.apiKey.isNotBlank()
+            _isConfigured.value = hasConfig
+
+            if (hasConfig) {
+                // Нормализуем URL: убираем trailing slash
+                val baseUrl = settings.serverUrl.trimEnd('/')
+                val httpClient = HttpClientFactory.create(baseUrl, settings.apiKey)
+                val apiService = KernvoxApiService(httpClient)
+                serversRepository = ApiServersRepository(apiService)
+                loadServers()
+            } else {
+                _uiState.value = UiState.Error("Настройки не указаны. Перейдите в Настройки и укажите URL сервера и API-ключ.")
+            }
+        }
     }
 
     fun loadServers() {
+        if (!_isConfigured.value) return
         viewModelScope.launch {
             try {
                 _uiState.value = UiState.Loading
                 val serversList = serversRepository.getServers()
                 _servers.value = serversList
                 _uiState.value = UiState.Success(serversList)
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Неизвестная ошибка")
-            }
-        }
-    }
-
-    fun addServer(server: Server) {
-        viewModelScope.launch {
-            try {
-                serversRepository.addServer(server)
-                _servers.value = _servers.value + server
-                _uiState.value = UiState.Success(_servers.value)
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Неизвестная ошибка")
             }

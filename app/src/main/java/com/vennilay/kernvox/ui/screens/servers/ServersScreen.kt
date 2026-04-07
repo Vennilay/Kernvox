@@ -3,6 +3,7 @@ package com.vennilay.kernvox.ui.screens.servers
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,62 +17,57 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vennilay.kernvox.R
 import com.vennilay.kernvox.data.model.Server
 import com.vennilay.kernvox.ui.components.EmptyState
+import com.vennilay.kernvox.ui.components.KernvoxButton
 import com.vennilay.kernvox.ui.components.ServerCard
-import com.vennilay.kernvox.ui.theme.KernvoxTheme
+import com.vennilay.kernvox.ui.state.UiState
 import com.vennilay.kernvox.viewmodel.ServersViewModel
-import kotlinx.coroutines.launch
+import com.vennilay.kernvox.viewmodel.ServersViewModelFactory
 
-/**
- * Экран отображения списка серверов с возможностью добавления новых.
- *
- * @param onNavigateBack Обработчик навигации назад
- * @param onServerClick Обработчик нажатия на сервер (открытие деталей)
- * @param modifier Модификатор для компонента
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServersScreen(
-    onNavigateBack: () -> Unit,
     onServerClick: (Server) -> Unit,
-    modifier: Modifier = Modifier
+    onNavigateToSettings: () -> Unit,
+    viewModel: ServersViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+        factory = ServersViewModelFactory(
+            LocalContext.current.applicationContext as android.app.Application,
+        ),
+    ),
+    modifier: Modifier = Modifier,
 ) {
-    val serversViewModel: ServersViewModel = viewModel()
-    val servers by serversViewModel.servers.collectAsState()
-
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-    val addServerSoonMessage = stringResource(R.string.servers_add_soon_snackbar)
+    val uiState by viewModel.uiState.collectAsState()
+    val servers by viewModel.servers.collectAsState()
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadServers()
+    }
 
     Scaffold(
         modifier = modifier
@@ -80,61 +76,71 @@ fun ServersScreen(
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             ServersTopAppBar(
-                scrollBehavior = scrollBehavior
+                scrollBehavior = scrollBehavior,
+                onNavigateToSettings = onNavigateToSettings,
+                onRefresh = { viewModel.loadServers() },
             )
         },
-        floatingActionButton = {
-            ServersFab(
-                onAddServer = {
-                    serversViewModel.addServer(
-                        Server(
-                            id = "srv-${System.currentTimeMillis()}",
-                            name = "New Server",
-                            host = "192.168.1.100",
-                            port = 8080,
-                            uptimeSeconds = 0,
-                            isAvailable = true,
-                            lastCheckedAtEpochMillis = System.currentTimeMillis(),
-                        )
-                    )
-                }
-            )
-        },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
-        if (servers.isEmpty()) {
-            // Пустое состояние
-            EmptyState(
-                title = stringResource(R.string.servers_empty_title),
-                subtitle = stringResource(R.string.servers_empty_subtitle),
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .fillMaxSize()
-            )
-        } else {
-            // Список серверов с возможностью скролла
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(vertical = 12.dp)
-            ) {
-                items(
-                    items = servers,
-                    key = { it.id },
-                    contentType = { "server_card" }
-                ) { server ->
-                    ServerCard(
-                        server = server,
-                        onClick = onServerClick
-                    )
+        when (val state = uiState) {
+            is UiState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator()
                 }
+            }
 
-                // Отступ внизу списка для FAB
-                item {
-                    Spacer(modifier = Modifier.height(100.dp))
+            is UiState.Error -> {
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        text = stringResource(R.string.servers_error_title),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = state.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    KernvoxButton(onClick = { viewModel.loadServers() }) {
+                        Text(stringResource(R.string.servers_retry))
+                    }
+                }
+            }
+
+            is UiState.Success -> {
+                if (servers.isEmpty()) {
+                    EmptyState(
+                        title = stringResource(R.string.servers_empty_title),
+                        subtitle = stringResource(R.string.servers_no_results_subtitle),
+                        modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(vertical = 12.dp),
+                    ) {
+                        items(
+                            items = servers,
+                            key = { it.id },
+                            contentType = { "server_card" },
+                        ) { server ->
+                            ServerCard(
+                                server = server,
+                                onClick = onServerClick,
+                            )
+                        }
+
+                        item {
+                            Spacer(modifier = Modifier.height(100.dp))
+                        }
+                    }
                 }
             }
         }
@@ -144,68 +150,47 @@ fun ServersScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ServersTopAppBar(
-    scrollBehavior: androidx.compose.material3.TopAppBarScrollBehavior
+    scrollBehavior: androidx.compose.material3.TopAppBarScrollBehavior,
+    onNavigateToSettings: () -> Unit,
+    onRefresh: () -> Unit,
 ) {
     TopAppBar(
         title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_server_placeholder),
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = stringResource(R.string.servers_title),
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
                 )
+            }
+        },
+        actions = {
+            IconButton(onClick = onRefresh) {
+                Icon(painter = painterResource(R.drawable.ic_refresh), contentDescription = stringResource(R.string.servers_refresh_cd))
+            }
+            IconButton(onClick = onNavigateToSettings) {
+                Icon(painter = painterResource(R.drawable.ic_settings), contentDescription = stringResource(R.string.servers_settings_cd))
             }
         },
         scrollBehavior = scrollBehavior,
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.background,
-            scrolledContainerColor = MaterialTheme.colorScheme.surface
-        )
+            scrolledContainerColor = MaterialTheme.colorScheme.surface,
+        ),
     )
-}
-
-@Composable
-private fun ServersFab(
-    onAddServer: () -> Unit
-) {
-    FloatingActionButton(
-        onClick = onAddServer,
-        shape = MaterialTheme.shapes.large,
-        containerColor = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.onPrimary
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_add),
-            contentDescription = stringResource(R.string.servers_add_button),
-            modifier = Modifier.size(24.dp)
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun ServersScreenPreview() {
-    KernvoxTheme {
-        ServersScreen(
-            onNavigateBack = {},
-            onServerClick = {}
-        )
-    }
 }
