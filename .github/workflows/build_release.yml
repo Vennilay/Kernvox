@@ -29,17 +29,16 @@ jobs:
       - name: Build debug APK
         run: ./gradlew assembleDebug
 
+      - name: Rename APK to Kernvox.apk
+        run: |
+          APK_PATH=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
+          mv "$APK_PATH" app/build/outputs/apk/debug/Kernvox.apk
+
       - name: Upload APK to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/debug/app-debug.apk
+          files: app/build/outputs/apk/debug/Kernvox.apk
           name: "Kernvox ${{ github.ref_name }}"
-          body: |
-            ## Kernvox ${{ github.ref_name }}
 
-            Автоматическая сборка debug APK.
-
-            ### Установка
-            Скачай app-debug.apk и установи на Android (minSdk 24).
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
