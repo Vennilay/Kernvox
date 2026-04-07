@@ -1,20 +1,28 @@
 package com.vennilay.kernvox.data.model
 
 import androidx.compose.runtime.Stable
-import kotlinx.serialization.Serializable
 
 /**
- * Модель данных сервера.
- * Аннотация @Stable помогает Compose оптимизировать перерисовки.
+ * Domain-модель сервера для отображения в UI.
+ * Объединяет данные из dashboard и detail эндпоинтов.
  */
 @Stable
-@Serializable
 data class Server(
-    val id: String,
+    val id: Int,
     val name: String,
     val host: String,
     val port: Int,
-    val uptimeSeconds: Long,
-    val isAvailable: Boolean,
-    val lastCheckedAtEpochMillis: Long,
+    val isActive: Boolean,
+    val isAvailable: Boolean?,
+    val cpuPercent: Float?,
+    val ramPercent: Float?,
+    val diskUsedPercent: Float?,
+    val uptimeSeconds: Float?,
+    val uptimeFormatted: String?,
+    val ramUsedMb: Float?,
+    val ramTotalMb: Float?,
+    val networkRxBytes: Float?,
+    val networkTxBytes: Float?,
+    val lastMetricTimestamp: String?,
+    val username: String?,
 )

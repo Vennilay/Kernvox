@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vennilay.kernvox.R
 import com.vennilay.kernvox.data.model.Server
-import com.vennilay.kernvox.ui.utils.formatLastChecked
+import com.vennilay.kernvox.ui.utils.formatTimestamp
 import com.vennilay.kernvox.ui.utils.formatUptime
 
 /**
@@ -34,14 +34,13 @@ import com.vennilay.kernvox.ui.utils.formatUptime
 fun ServerCard(
     server: Server,
     modifier: Modifier = Modifier,
-    onClick: ((Server) -> Unit)? = null
+    onClick: ((Server) -> Unit)? = null,
 ) {
-    // Кэшируем результаты форматирования для оптимизации производительности
     val uptimeFormatted = remember(server.uptimeSeconds) {
-        formatUptime(server.uptimeSeconds)
+        server.uptimeSeconds?.toLong()?.let { formatUptime(it) } ?: "—"
     }
-    val lastCheckedFormatted = remember(server.lastCheckedAtEpochMillis) {
-        formatLastChecked(server.lastCheckedAtEpochMillis)
+    val lastCheckedFormatted = remember(server.lastMetricTimestamp) {
+        server.lastMetricTimestamp?.let { formatTimestamp(it) } ?: "—"
     }
 
     Card(
@@ -59,7 +58,6 @@ fun ServerCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Заголовок карточки: иконка + название + статус
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -88,12 +86,11 @@ fun ServerCard(
                 }
 
                 // Бейдж статуса
-                StatusBadge(isOnline = server.isAvailable)
+                StatusBadge(isOnline = server.isAvailable ?: false)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Хост и порт
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -115,7 +112,6 @@ fun ServerCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Дополнительная информация: uptime и последняя проверка
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween

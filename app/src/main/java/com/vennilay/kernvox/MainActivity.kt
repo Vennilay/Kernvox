@@ -3,21 +3,21 @@ package com.vennilay.kernvox
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.compose.BackHandler
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.tooling.preview.Preview
-import com.vennilay.kernvox.data.model.Server
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.vennilay.kernvox.ui.screens.home.HomeScreen
 import com.vennilay.kernvox.ui.screens.serverDetail.ServerDetailScreen
 import com.vennilay.kernvox.ui.screens.servers.ServersScreen
+import com.vennilay.kernvox.ui.screens.settings.SettingsScreen
 import com.vennilay.kernvox.ui.theme.KernvoxTheme
 
 /**
  * Главная активность приложения Kernvox.
- * Управляет навигацией между экранами приветствия, серверов и деталей сервера.
  */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,45 +25,78 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             KernvoxTheme {
-                AppRoot()
+                AppNavHost()
             }
         }
     }
 }
 
 /**
- * Корневой компонент приложения, управляющий навигацией между экранами.
+ * Навигационный граф приложения.
  */
 @Composable
-private fun AppRoot() {
-    val showServers = rememberSaveable { mutableStateOf(false) }
-    val selectedServer = rememberSaveable { mutableStateOf<Server?>(null) }
+private fun AppNavHost() {
+    val navController = rememberNavController()
 
-    when {
-        selectedServer.value != null -> {
-            ServerDetailScreen(
-                server = selectedServer.value!!,
-                onNavigateBack = { selectedServer.value = null }
-            )
-        }
-        showServers.value -> {
-            ServersScreen(
-                onNavigateBack = { showServers.value = false },
-                onServerClick = { server -> selectedServer.value = server }
-            )
-        }
-        else -> {
+    NavHost(
+        navController = navController,
+        startDestination = Screen.Home.route,
+    ) {
+        composable(Screen.Home.route) {
             HomeScreen(
-                onOpenApp = { showServers.value = true }
+                onOpenApp = {
+                    navController.navigate(Screen.Servers.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
+            )
+        }
+
+        composable(Screen.Servers.route) {
+            ServersScreen(
+                onServerClick = { server ->
+                    navController.navigate(Screen.Detail.createRoute(server.id))
+                },
+                onNavigateToSettings = {
+                    navController.navigate(Screen.Settings.route)
+                },
+            )
+        }
+
+        composable(
+            route = Screen.Detail.routeWithArgs,
+            arguments = listOf(
+                navArgument("serverId") { type = NavType.IntType },
+            ),
+        ) { backStackEntry ->
+            val serverId = backStackEntry.arguments?.getInt("serverId") ?: return@composable
+            ServerDetailScreen(
+                serverId = serverId,
+                onNavigateBack = {
+                    navController.navigateUp()
+                },
+            )
+        }
+
+        composable(Screen.Settings.route) {
+            SettingsScreen(
+                onNavigateBack = {
+                    navController.navigateUp()
+                },
             )
         }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun AppRootPreview() {
-    KernvoxTheme {
-        AppRoot()
+/**
+ * Экраны приложения с маршрутами для Navigation Compose.
+ */
+sealed class Screen(val route: String) {
+    data object Home : Screen("home")
+    data object Servers : Screen("servers")
+    data object Settings : Screen("settings")
+    data object Detail : Screen("detail/{serverId}") {
+        fun createRoute(serverId: Int) = "detail/$serverId"
+        const val routeWithArgs = "detail/{serverId}"
     }
 }
