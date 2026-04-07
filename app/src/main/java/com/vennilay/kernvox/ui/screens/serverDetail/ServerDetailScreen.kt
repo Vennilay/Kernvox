@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vennilay.kernvox.R
@@ -83,9 +84,7 @@ fun ServerDetailScreen(
         when (val state = uiState) {
             is UiState.Loading -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
                     contentAlignment = Alignment.Center,
                 ) {
                     CircularProgressIndicator()
@@ -94,28 +93,21 @@ fun ServerDetailScreen(
 
             is UiState.Error -> {
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
                     Text(
-                        text = "Ошибка загрузки",
+                        text = stringResource(R.string.server_detail_loading_error),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.error,
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = state.message,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    Text(text = state.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(modifier = Modifier.height(16.dp))
                     KernvoxButton(onClick = { viewModel.refresh() }) {
-                        Text("Повторить")
+                        Text(stringResource(R.string.server_detail_retry))
                     }
                 }
             }
@@ -130,11 +122,13 @@ fun ServerDetailScreen(
 
 @Composable
 private fun ServerDetailContent(server: Server) {
+    val ramUnit = stringResource(R.string.server_detail_ram_unit)
+    val daysUnit = stringResource(R.string.time_days)
+    val hoursUnit = stringResource(R.string.time_hours)
+    val minutesUnit = stringResource(R.string.time_minutes)
+
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(modifier = Modifier.height(16.dp))
@@ -142,7 +136,7 @@ private fun ServerDetailContent(server: Server) {
         Spacer(modifier = Modifier.height(24.dp))
 
         InfoTile(
-            label = "Адрес",
+            label = stringResource(R.string.server_detail_address),
             value = "${server.host}:${server.port}",
             icon = R.drawable.ic_location,
         )
@@ -150,7 +144,7 @@ private fun ServerDetailContent(server: Server) {
 
         server.username?.let { username ->
             InfoTile(
-                label = "Пользователь",
+                label = stringResource(R.string.server_detail_username),
                 value = username,
                 icon = R.drawable.ic_server_placeholder,
             )
@@ -159,7 +153,7 @@ private fun ServerDetailContent(server: Server) {
 
         server.cpuPercent?.let { cpu ->
             InfoTile(
-                label = "CPU",
+                label = stringResource(R.string.server_detail_cpu),
                 value = "%.1f%%".format(cpu),
                 icon = R.drawable.ic_monitoring,
             )
@@ -168,8 +162,8 @@ private fun ServerDetailContent(server: Server) {
 
         if (server.ramUsedMb != null && server.ramTotalMb != null) {
             InfoTile(
-                label = "RAM",
-                value = "%.0f МБ / %.0f МБ (%.1f%%)".format(
+                label = stringResource(R.string.server_detail_ram),
+                value = "%.0f $ramUnit / %.0f $ramUnit (%.1f%%)".format(
                     server.ramUsedMb,
                     server.ramTotalMb,
                     server.ramPercent ?: 0f,
@@ -181,7 +175,7 @@ private fun ServerDetailContent(server: Server) {
 
         server.diskUsedPercent?.let { disk ->
             InfoTile(
-                label = "Диск",
+                label = stringResource(R.string.server_detail_disk),
                 value = "%.1f%%".format(disk),
                 icon = R.drawable.ic_server_placeholder,
             )
@@ -190,14 +184,14 @@ private fun ServerDetailContent(server: Server) {
 
         server.uptimeFormatted?.let { uptime ->
             InfoTile(
-                label = "Аптайм",
+                label = stringResource(R.string.server_detail_uptime),
                 value = uptime,
                 icon = R.drawable.ic_uptime,
             )
         } ?: server.uptimeSeconds?.let { seconds ->
             InfoTile(
-                label = "Аптайм",
-                value = formatUptime(seconds.toLong()),
+                label = stringResource(R.string.server_detail_uptime),
+                value = formatUptime(seconds.toLong(), daysUnit, hoursUnit, minutesUnit),
                 icon = R.drawable.ic_uptime,
             )
         }
@@ -206,7 +200,7 @@ private fun ServerDetailContent(server: Server) {
 
         server.lastMetricTimestamp?.let { ts ->
             InfoTile(
-                label = "Последняя метрика",
+                label = stringResource(R.string.server_detail_last_metric),
                 value = formatTimestamp(ts),
                 icon = R.drawable.ic_quickview,
             )
@@ -225,9 +219,7 @@ private fun ServerDetailTopAppBar(
         title = {},
         navigationIcon = {
             Row(
-                modifier = Modifier
-                    .clickable(onClick = onNavigateBack)
-                    .padding(horizontal = 8.dp),
+                modifier = Modifier.clickable(onClick = onNavigateBack).padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
@@ -237,7 +229,7 @@ private fun ServerDetailTopAppBar(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "Назад",
+                    text = stringResource(R.string.back_button),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -248,7 +240,7 @@ private fun ServerDetailTopAppBar(
             IconButton(onClick = onRefresh) {
                 Icon(
                     painter = painterResource(R.drawable.ic_refresh),
-                    contentDescription = "Обновить",
+                    contentDescription = stringResource(R.string.server_detail_refresh_cd),
                 )
             }
         },

@@ -7,16 +7,22 @@ import java.util.TimeZone
 /**
  * Форматирует время аптайма из секунд в читаемый формат.
  */
-fun formatUptime(seconds: Long): String {
+fun formatUptime(
+    seconds: Long,
+    daysUnit: String = "дн",
+    hoursUnit: String = "ч",
+    minutesUnit: String = "мин",
+    secondsUnit: String = "сек",
+): String {
     val days = seconds / 86400
     val hours = (seconds % 86400) / 3600
     val minutes = (seconds % 3600) / 60
 
     return buildString {
-        if (days > 0) append("${days}дн ")
-        if (hours > 0 || days > 0) append("${hours}ч ")
-        if (minutes > 0 || hours > 0 || days > 0) append("${minutes}мин")
-        if (seconds < 60) append("${seconds % 60}сек")
+        if (days > 0) append("$days$daysUnit ")
+        if (hours > 0 || days > 0) append("$hours$hoursUnit ")
+        if (minutes > 0 || hours > 0 || days > 0) append("$minutes$minutesUnit")
+        if (seconds < 60) append("${seconds % 60}$secondsUnit")
     }.trim()
 }
 

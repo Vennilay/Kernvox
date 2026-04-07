@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -76,7 +77,7 @@ fun SettingsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Настройки",
+                        text = stringResource(R.string.settings_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -85,7 +86,7 @@ fun SettingsScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             painter = painterResource(R.drawable.ic_back),
-                            contentDescription = "Назад",
+                            contentDescription = stringResource(R.string.settings_back_cd),
                         )
                     }
                 },
@@ -107,7 +108,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Подключение к KernvoxHub",
+                text = stringResource(R.string.settings_section_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
@@ -116,7 +117,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Укажите URL вашего сервера KernvoxHub и API-ключ для подключения.",
+                text = stringResource(R.string.settings_description),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -126,8 +127,8 @@ fun SettingsScreen(
             OutlinedTextField(
                 value = serverUrl,
                 onValueChange = { serverUrl = it },
-                label = { Text("URL сервера") },
-                placeholder = { Text("https://kernvox.example.com") },
+                label = { Text(stringResource(R.string.settings_server_url_label)) },
+                placeholder = { Text(stringResource(R.string.settings_server_url_placeholder)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
@@ -138,8 +139,8 @@ fun SettingsScreen(
             OutlinedTextField(
                 value = apiKey,
                 onValueChange = { apiKey = it },
-                label = { Text("API-ключ") },
-                placeholder = { Text("Ваш X-API-Key") },
+                label = { Text(stringResource(R.string.settings_api_key_label)) },
+                placeholder = { Text(stringResource(R.string.settings_api_key_placeholder)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
@@ -154,14 +155,14 @@ fun SettingsScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Сохранить")
+                Text(stringResource(R.string.settings_save_button))
             }
 
             when (settingsState) {
                 is UiState.Success -> {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Настройки сохранены",
+                        text = stringResource(R.string.settings_saved_message),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                     )

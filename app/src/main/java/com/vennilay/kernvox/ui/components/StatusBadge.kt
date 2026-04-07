@@ -13,58 +13,59 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.vennilay.kernvox.R
 
 /**
  * Компонент отображения статуса сервера в виде бейджа с точкой-индикатором.
- *
- * @param isOnline Статус сервера: true — онлайн, false — оффлайн
- * @param modifier Модификатор для компонента
  */
 @Composable
 fun StatusBadge(
     isOnline: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    val backgroundColor = MaterialTheme.colorScheme.run {
-        if (isOnline) primaryContainer else errorContainer
+    val backgroundColor = if (isOnline) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.errorContainer
     }
-
-    val textColor = MaterialTheme.colorScheme.run {
-        if (isOnline) onPrimaryContainer else onErrorContainer
+    val textColor = if (isOnline) {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    } else {
+        MaterialTheme.colorScheme.onErrorContainer
     }
-
-    val indicatorColor = MaterialTheme.colorScheme.run {
-        if (isOnline) primary else error
+    val indicatorColor = if (isOnline) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.error
     }
-
-    val statusText = if (isOnline) "Онлайн" else "Оффлайн"
 
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .background(backgroundColor)
             .padding(horizontal = 10.dp, vertical = 5.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Точка-индикатор статуса
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
                     .size(8.dp)
                     .clip(CircleShape)
-                    .background(indicatorColor)
+                    .background(indicatorColor),
             )
-
             Text(
-                text = statusText,
+                text = if (isOnline) {
+                    stringResource(R.string.servers_status_online)
+                } else {
+                    stringResource(R.string.servers_status_offline)
+                },
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Medium,
                 color = textColor,
-                modifier = Modifier.padding(start = 6.dp)
+                modifier = Modifier.padding(start = 6.dp),
             )
         }
     }

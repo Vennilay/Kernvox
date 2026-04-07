@@ -99,7 +99,7 @@ fun ServersScreen(
                     verticalArrangement = Arrangement.Center,
                 ) {
                     Text(
-                        text = "Ошибка",
+                        text = stringResource(R.string.servers_error_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.error,
@@ -108,7 +108,7 @@ fun ServersScreen(
                     Text(text = state.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(modifier = Modifier.height(16.dp))
                     KernvoxButton(onClick = { viewModel.loadServers() }) {
-                        Text("Повторить")
+                        Text(stringResource(R.string.servers_retry))
                     }
                 }
             }
@@ -117,7 +117,7 @@ fun ServersScreen(
                 if (servers.isEmpty()) {
                     EmptyState(
                         title = stringResource(R.string.servers_empty_title),
-                        subtitle = "Серверы не найдены. Добавьте серверы через KernvoxHub.",
+                        subtitle = stringResource(R.string.servers_no_results_subtitle),
                         modifier = Modifier.fillMaxSize().padding(paddingValues),
                     )
                 } else {
@@ -181,10 +181,10 @@ private fun ServersTopAppBar(
         },
         actions = {
             IconButton(onClick = onRefresh) {
-                Icon(painter = painterResource(R.drawable.ic_refresh), contentDescription = "Обновить")
+                Icon(painter = painterResource(R.drawable.ic_refresh), contentDescription = stringResource(R.string.servers_refresh_cd))
             }
             IconButton(onClick = onNavigateToSettings) {
-                Icon(painter = painterResource(R.drawable.ic_settings), contentDescription = "Настройки")
+                Icon(painter = painterResource(R.drawable.ic_settings), contentDescription = stringResource(R.string.servers_settings_cd))
             }
         },
         scrollBehavior = scrollBehavior,

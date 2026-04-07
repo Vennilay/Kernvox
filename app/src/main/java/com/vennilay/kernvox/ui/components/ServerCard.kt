@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vennilay.kernvox.R
@@ -25,10 +26,6 @@ import com.vennilay.kernvox.ui.utils.formatUptime
 
 /**
  * Карточка сервера с отображением всей ключевой информации.
- *
- * @param server Данные сервера для отображения
- * @param modifier Модификатор для компонента
- * @param onClick Обработчик нажатия на карточку (опционально), передаёт сервер
  */
 @Composable
 fun ServerCard(
@@ -36,77 +33,64 @@ fun ServerCard(
     modifier: Modifier = Modifier,
     onClick: ((Server) -> Unit)? = null,
 ) {
-    val uptimeFormatted = remember(server.uptimeSeconds) {
-        server.uptimeSeconds?.toLong()?.let { formatUptime(it) } ?: "—"
+    val noData = stringResource(R.string.server_card_no_data)
+    val daysUnit = stringResource(R.string.time_days)
+    val hoursUnit = stringResource(R.string.time_hours)
+    val minutesUnit = stringResource(R.string.time_minutes)
+    val secondsUnit = stringResource(R.string.time_seconds)
+
+    val uptimeFormatted = remember(server.uptimeSeconds, daysUnit, hoursUnit, minutesUnit, secondsUnit) {
+        server.uptimeSeconds?.toLong()?.let { formatUptime(it, daysUnit, hoursUnit, minutesUnit, secondsUnit) } ?: noData
     }
     val lastCheckedFormatted = remember(server.lastMetricTimestamp) {
-        server.lastMetricTimestamp?.let { formatTimestamp(it) } ?: "—"
+        server.lastMetricTimestamp?.let { formatTimestamp(it) } ?: noData
     }
 
     Card(
-        modifier = modifier
-            .fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        onClick = { onClick?.invoke(server) }
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        onClick = { onClick?.invoke(server) },
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Иконка сервера
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     IconCircle(
                         icon = R.drawable.ic_server_placeholder,
                         containerSize = 40,
                         iconSize = 20,
-                        rounded = false
+                        rounded = false,
                     )
-
                     Spacer(modifier = Modifier.width(12.dp))
-
-                    // Название сервера
                     Text(
                         text = server.name,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
-
-                // Бейдж статуса
                 StatusBadge(isOnline = server.isAvailable ?: false)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 IconCircle(
                     icon = R.drawable.ic_location,
                     containerSize = 32,
                     iconSize = 16,
-                    rounded = true
+                    rounded = true,
                 )
-
                 Spacer(modifier = Modifier.width(12.dp))
-
                 Text(
                     text = "${server.host}:${server.port}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
@@ -114,37 +98,35 @@ fun ServerCard(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                // Uptime
                 Column {
                     Text(
-                        text = "Аптайм",
+                        text = stringResource(R.string.server_card_uptime_label_short),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = uptimeFormatted,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
 
-                // Последняя проверка
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "Проверен",
+                        text = stringResource(R.string.server_card_last_check_label_short),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = lastCheckedFormatted,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }
