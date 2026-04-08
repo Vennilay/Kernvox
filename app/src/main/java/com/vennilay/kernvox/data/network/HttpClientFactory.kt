@@ -12,7 +12,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
-import java.time.Duration
+import java.util.concurrent.TimeUnit
 
 object HttpClientFactory {
     fun create(
@@ -22,8 +22,8 @@ object HttpClientFactory {
         return HttpClient(OkHttp) {
             engine {
                 config {
-                    connectTimeout(Duration.ofMillis(15_000))
-                    readTimeout(Duration.ofMillis(30_000))
+                    connectTimeout(15_000, TimeUnit.MILLISECONDS)
+                    readTimeout(30_000, TimeUnit.MILLISECONDS)
                 }
             }
 

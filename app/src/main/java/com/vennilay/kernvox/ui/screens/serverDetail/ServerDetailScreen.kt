@@ -1,10 +1,10 @@
 package com.vennilay.kernvox.ui.screens.serverDetail
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -75,6 +75,14 @@ fun ServerDetailScreen(
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             ServerDetailTopAppBar(
+                serverName = uiState.let { state ->
+                    if (state is UiState.Success<*>) {
+                        @Suppress("UNCHECKED_CAST")
+                        (state as UiState.Success<Server>).data.name
+                    } else {
+                        ""
+                    }
+                },
                 onNavigateBack = onNavigateBack,
                 scrollBehavior = scrollBehavior,
                 onRefresh = { viewModel.refresh() },
@@ -114,21 +122,31 @@ fun ServerDetailScreen(
 
             is UiState.Success<*> -> {
                 @Suppress("UNCHECKED_CAST")
-                ServerDetailContent(server = (state as UiState.Success<Server>).data)
+                ServerDetailContent(
+                    server = (state as UiState.Success<Server>).data,
+                    paddingValues = paddingValues,
+                )
             }
         }
     }
 }
 
 @Composable
-private fun ServerDetailContent(server: Server) {
+private fun ServerDetailContent(
+    server: Server,
+    paddingValues: androidx.compose.foundation.layout.PaddingValues,
+) {
     val ramUnit = stringResource(R.string.server_detail_ram_unit)
     val daysUnit = stringResource(R.string.time_days)
     val hoursUnit = stringResource(R.string.time_hours)
     val minutesUnit = stringResource(R.string.time_minutes)
 
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(modifier = Modifier.height(16.dp))
@@ -211,28 +229,27 @@ private fun ServerDetailContent(server: Server) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ServerDetailTopAppBar(
+    serverName: String,
     onNavigateBack: () -> Unit,
     scrollBehavior: androidx.compose.material3.TopAppBarScrollBehavior,
     onRefresh: () -> Unit,
 ) {
     TopAppBar(
-        title = {},
+        title = {
+            Text(
+                text = serverName,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            )
+        },
         navigationIcon = {
-            Row(
-                modifier = Modifier.clickable(onClick = onNavigateBack).padding(horizontal = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+            IconButton(onClick = onNavigateBack) {
                 Icon(
                     painter = painterResource(R.drawable.ic_back),
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.back_button),
                     tint = MaterialTheme.colorScheme.onSurface,
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = stringResource(R.string.back_button),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
         },
