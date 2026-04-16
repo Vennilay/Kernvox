@@ -14,9 +14,18 @@
 
     <!-- Servers Screen -->
     <string name="servers_title">Серверы</string>
+    <string name="servers_hub_title">KernvoxHub</string>
+    <string name="servers_hub_subtitle">Главный сервер приложения</string>
+    <string name="servers_hub_url_label">URL</string>
+    <string name="servers_hub_host_label">Хост</string>
+    <string name="servers_hub_total_nodes">Нод</string>
+    <string name="servers_hub_available_nodes">Онлайн</string>
+    <string name="servers_hub_last_sync">Обновлён</string>
+    <string name="servers_nodes_title">Привязанные ноды</string>
+    <string name="servers_nodes_subtitle">Найдено нод: %1$d</string>
     <string name="servers_empty_title">Список серверов пуст</string>
-    <string name="servers_empty_subtitle">Добавьте первый сервер для начала мониторинга</string>
-    <string name="servers_no_results_subtitle">Серверы не найдены. Добавьте серверы через KernvoxHub.</string>
+    <string name="servers_empty_subtitle">Добавьте первую ноду для начала мониторинга</string>
+    <string name="servers_no_results_subtitle">Ноды не найдены. Добавьте серверы через KernvoxHub.</string>
     <string name="servers_status_label">Статус</string>
     <string name="servers_status_online">Онлайн</string>
     <string name="servers_status_offline">Оффлайн</string>
@@ -35,6 +44,9 @@
     <string name="server_card_last_check_label">Последняя проверка</string>
     <string name="server_card_uptime_label_short">Аптайм</string>
     <string name="server_card_last_check_label_short">Проверен</string>
+    <string name="server_card_cpu_label">CPU</string>
+    <string name="server_card_ram_label">RAM</string>
+    <string name="server_card_disk_label">Диск</string>
     <string name="server_card_no_data">—</string>
 
     <!-- Server Detail Screen -->
