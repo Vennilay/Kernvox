@@ -54,3 +54,21 @@ fun ServerDetailsDto.toServer(): Server {
         username = username,
     )
 }
+
+fun Server.mergeWith(details: Server): Server {
+    return copy(
+        port = details.port,
+        cpuPercent = details.cpuPercent ?: cpuPercent,
+        ramPercent = details.ramPercent ?: ramPercent,
+        diskUsedPercent = details.diskUsedPercent ?: diskUsedPercent,
+        uptimeSeconds = details.uptimeSeconds ?: uptimeSeconds,
+        uptimeFormatted = details.uptimeFormatted ?: uptimeFormatted,
+        ramUsedMb = details.ramUsedMb ?: ramUsedMb,
+        ramTotalMb = details.ramTotalMb ?: ramTotalMb,
+        networkRxBytes = details.networkRxBytes ?: networkRxBytes,
+        networkTxBytes = details.networkTxBytes ?: networkTxBytes,
+        lastMetricTimestamp = details.lastMetricTimestamp ?: lastMetricTimestamp,
+        username = details.username ?: username,
+        isAvailable = details.isAvailable ?: isAvailable,
+    )
+}

@@ -26,7 +26,11 @@ class DetailViewModel(
     private val _uiState = MutableStateFlow<UiState<Server>>(UiState.Loading)
     val uiState: StateFlow<UiState<Server>> = _uiState.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     private var pollingJob: Job? = null
+    private var repository: ApiServersRepository? = null
 
     init {
         startPolling()
@@ -39,40 +43,49 @@ class DetailViewModel(
             val baseUrl = settings.serverUrl.trimEnd('/')
             val httpClient = HttpClientFactory.create(baseUrl, settings.apiKey)
             val apiService = KernvoxApiService(httpClient)
-            val repository = ApiServersRepository(apiService)
+            repository = ApiServersRepository(apiService)
 
-            loadDetails(repository)
+            loadDetails(showLoading = true)
 
             pollingJob = viewModelScope.launch {
                 while (isActive) {
                     delay(30_000)
-                    loadDetails(repository)
+                    loadDetails(showLoading = false)
                 }
             }
         }
     }
 
-    private suspend fun loadDetails(repository: ApiServersRepository) {
+    private suspend fun loadDetails(showLoading: Boolean) {
+        val currentRepository = repository ?: return
         try {
-            val server = repository.getServerDetails(serverId)
+            if (showLoading && _uiState.value !is UiState.Success) {
+                _uiState.value = UiState.Loading
+            } else {
+                _isRefreshing.value = true
+            }
+            val server = currentRepository.getServerDetails(serverId)
             _uiState.value = UiState.Success(server)
         } catch (e: Exception) {
-            if (_uiState.value is UiState.Loading) {
+            if (_uiState.value !is UiState.Success) {
                 _uiState.value = UiState.Error(e.message ?: "Неизвестная ошибка")
             }
+        } finally {
+            _isRefreshing.value = false
         }
     }
 
     fun refresh() {
         viewModelScope.launch {
-            _uiState.value = UiState.Loading
-            val settingsRepo = AppSettingsRepository(application)
-            val settings = settingsRepo.settings.first()
-            val baseUrl = settings.serverUrl.trimEnd('/')
-            val httpClient = HttpClientFactory.create(baseUrl, settings.apiKey)
-            val apiService = KernvoxApiService(httpClient)
-            val repository = ApiServersRepository(apiService)
-            loadDetails(repository)
+            if (repository == null) {
+                val settingsRepo = AppSettingsRepository(application)
+                val settings = settingsRepo.settings.first()
+                val baseUrl = settings.serverUrl.trimEnd('/')
+                val httpClient = HttpClientFactory.create(baseUrl, settings.apiKey)
+                val apiService = KernvoxApiService(httpClient)
+                repository = ApiServersRepository(apiService)
+            }
+            loadDetails(showLoading = _uiState.value !is UiState.Success)
         }
     }
 

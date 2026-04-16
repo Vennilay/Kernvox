@@ -45,6 +45,15 @@ fun ServerCard(
     val lastCheckedFormatted = remember(server.lastMetricTimestamp) {
         server.lastMetricTimestamp?.let { formatTimestamp(it) } ?: noData
     }
+    val cpuFormatted = remember(server.cpuPercent) {
+        server.cpuPercent?.let { "%.1f%%".format(it) } ?: noData
+    }
+    val ramFormatted = remember(server.ramPercent) {
+        server.ramPercent?.let { "%.1f%%".format(it) } ?: noData
+    }
+    val diskFormatted = remember(server.diskUsedPercent) {
+        server.diskUsedPercent?.let { "%.1f%%".format(it) } ?: noData
+    }
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -130,6 +139,47 @@ fun ServerCard(
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                MetricColumn(
+                    label = stringResource(R.string.server_card_cpu_label),
+                    value = cpuFormatted,
+                )
+                MetricColumn(
+                    label = stringResource(R.string.server_card_ram_label),
+                    value = ramFormatted,
+                )
+                MetricColumn(
+                    label = stringResource(R.string.server_card_disk_label),
+                    value = diskFormatted,
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun MetricColumn(
+    label: String,
+    value: String,
+) {
+    Column {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
     }
 }
