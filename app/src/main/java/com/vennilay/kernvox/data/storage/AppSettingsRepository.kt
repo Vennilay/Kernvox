@@ -34,12 +34,6 @@ class AppSettingsRepository(context: Context) {
         }
     }
 
-    suspend fun clearSettings() {
-        dataStore.edit { prefs ->
-            prefs.clear()
-        }
-    }
-
     companion object {
         private val KEY_SERVER_URL = stringPreferencesKey("server_url")
         private val KEY_API_KEY = stringPreferencesKey("api_key")
