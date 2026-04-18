@@ -36,6 +36,7 @@ class SettingsViewModel(
     fun saveSettings(serverUrl: String, apiKey: String) {
         viewModelScope.launch {
             try {
+                _settingsState.value = UiState.Loading
                 settingsRepository.saveSettings(serverUrl, apiKey)
                 _settingsState.value = UiState.Success(AppSettings(serverUrl, apiKey))
             } catch (e: Exception) {

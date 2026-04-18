@@ -17,6 +17,7 @@ data class Server(
     val cpuPercent: Float?,
     val ramPercent: Float?,
     val diskUsedPercent: Float?,
+    val cpuCores: Int?,
     val uptimeSeconds: Float?,
     val uptimeFormatted: String?,
     val ramUsedMb: Float?,

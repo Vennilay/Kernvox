@@ -21,12 +21,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vennilay.kernvox.R
 import com.vennilay.kernvox.data.model.Server
+import com.vennilay.kernvox.ui.theme.Spacing
 import com.vennilay.kernvox.ui.utils.formatTimestamp
 import com.vennilay.kernvox.ui.utils.formatUptime
 
-/**
- * Карточка сервера с отображением всей ключевой информации.
- */
 @Composable
 fun ServerCard(
     server: Server,
@@ -62,7 +60,7 @@ fun ServerCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         onClick = { onClick?.invoke(server) },
     ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(Spacing.md)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -75,7 +73,7 @@ fun ServerCard(
                         iconSize = 20,
                         rounded = false,
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(Spacing.sm))
                     Text(
                         text = server.name,
                         style = MaterialTheme.typography.titleMedium,
@@ -86,7 +84,7 @@ fun ServerCard(
                 StatusBadge(isOnline = server.isAvailable ?: false)
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Spacing.md))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconCircle(
@@ -95,7 +93,7 @@ fun ServerCard(
                     iconSize = 16,
                     rounded = true,
                 )
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(Spacing.sm))
                 Text(
                     text = "${server.host}:${server.port}",
                     style = MaterialTheme.typography.bodyMedium,
@@ -103,7 +101,7 @@ fun ServerCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Spacing.md))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -115,7 +113,7 @@ fun ServerCard(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(Spacing.xs))
                     Text(
                         text = uptimeFormatted,
                         style = MaterialTheme.typography.bodyMedium,
@@ -130,7 +128,7 @@ fun ServerCard(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(Spacing.xs))
                     Text(
                         text = lastCheckedFormatted,
                         style = MaterialTheme.typography.bodyMedium,
@@ -140,46 +138,28 @@ fun ServerCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Spacing.md))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                MetricColumn(
+                MetricChip(
                     label = stringResource(R.string.server_card_cpu_label),
                     value = cpuFormatted,
+                    rawValue = server.cpuPercent,
                 )
-                MetricColumn(
+                MetricChip(
                     label = stringResource(R.string.server_card_ram_label),
                     value = ramFormatted,
+                    rawValue = server.ramPercent,
                 )
-                MetricColumn(
+                MetricChip(
                     label = stringResource(R.string.server_card_disk_label),
                     value = diskFormatted,
+                    rawValue = server.diskUsedPercent,
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun MetricColumn(
-    label: String,
-    value: String,
-) {
-    Column {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
     }
 }

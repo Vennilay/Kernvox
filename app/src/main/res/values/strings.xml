@@ -79,6 +79,41 @@
     <string name="settings_save_button">Сохранить</string>
     <string name="settings_saved_message">Настройки сохранены</string>
 
+    <!-- Server Detail — Tabs -->
+    <string name="server_detail_tab_overview">Обзор</string>
+    <string name="server_detail_tab_processes">Процессы</string>
+    <string name="server_detail_tab_history">История</string>
+
+    <!-- Server Detail — new InfoTiles -->
+    <string name="server_detail_cpu_cores">Ядра CPU</string>
+    <string name="server_detail_network_rx">Получено (RX)</string>
+    <string name="server_detail_network_tx">Отправлено (TX)</string>
+
+    <!-- Processes tab -->
+    <string name="processes_empty_title">Нет данных о процессах</string>
+    <string name="processes_empty_subtitle">Информация о процессах недоступна</string>
+    <string name="processes_error_title">Ошибка загрузки процессов</string>
+    <string name="processes_retry">Повторить</string>
+
+    <!-- History tab -->
+    <string name="history_empty_title">История метрик пуста</string>
+    <string name="history_empty_subtitle">Данные за выбранный период отсутствуют</string>
+    <string name="history_error_title">Ошибка загрузки истории</string>
+    <string name="history_retry">Повторить</string>
+    <string name="history_cpu_label">CPU</string>
+    <string name="history_ram_label">RAM</string>
+    <string name="history_disk_label">Диск</string>
+    <string name="history_unavailable">Недоступен</string>
+
+    <!-- Network formatting -->
+    <string name="network_bytes_kb">КБ</string>
+    <string name="network_bytes_mb">МБ</string>
+    <string name="network_bytes_gb">ГБ</string>
+
+    <!-- Settings — validation and loading -->
+    <string name="settings_url_error">URL должен начинаться с http:// или https://</string>
+    <string name="settings_saved_ok">✓ Настройки сохранены</string>
+
     <!-- Time units -->
     <string name="time_days">дн</string>
     <string name="time_hours">ч</string>

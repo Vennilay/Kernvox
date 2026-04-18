@@ -1,24 +1,15 @@
 package com.vennilay.kernvox.ui.state
 
-/**
- * Запечатанное представление состояния UI для экранов приложения.
- * Используется для управления состояниями загрузки, успеха и ошибки.
- */
+import androidx.compose.runtime.Immutable
+
+@Immutable
 sealed class UiState<out T> {
-    /**
-     * Состояние загрузки данных.
-     */
+    @Immutable
     data object Loading : UiState<Nothing>()
 
-    /**
-     * Состояние успешной загрузки данных.
-     * @param data Загруженные данные
-     */
+    @Immutable
     data class Success<T>(val data: T) : UiState<T>()
 
-    /**
-     * Состояние ошибки при загрузке данных.
-     * @param message Сообщение об ошибке
-     */
+    @Immutable
     data class Error(val message: String) : UiState<Nothing>()
 }

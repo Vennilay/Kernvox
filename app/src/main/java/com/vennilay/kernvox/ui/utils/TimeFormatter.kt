@@ -31,6 +31,16 @@ fun formatUptime(
  * Пример входа: "2026-04-07T18:47:11.844222Z"
  * Пример выхода: "07.04.2026 21:47" (локальное время)
  */
+fun formatBytes(bytes: Float?, kbUnit: String, mbUnit: String, gbUnit: String): String {
+    if (bytes == null) return "—"
+    return when {
+        bytes >= 1_073_741_824f -> "${"%.1f".format(bytes / 1_073_741_824f)} $gbUnit"
+        bytes >= 1_048_576f     -> "${"%.1f".format(bytes / 1_048_576f)} $mbUnit"
+        bytes >= 1024f          -> "${"%.0f".format(bytes / 1024f)} $kbUnit"
+        else                    -> "${"%.0f".format(bytes)} Б"
+    }
+}
+
 fun formatTimestamp(isoTimestamp: String): String {
     return try {
         val trimmed = if (isoTimestamp.contains(".")) {

@@ -1,5 +1,10 @@
 package com.vennilay.kernvox.ui.screens.servers
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,16 +24,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -45,10 +50,12 @@ import com.vennilay.kernvox.R
 import com.vennilay.kernvox.data.model.HubOverview
 import com.vennilay.kernvox.data.model.Server
 import com.vennilay.kernvox.ui.components.EmptyState
+import com.vennilay.kernvox.ui.components.ErrorContent
 import com.vennilay.kernvox.ui.components.IconCircle
-import com.vennilay.kernvox.ui.components.KernvoxButton
+import com.vennilay.kernvox.ui.components.LoadingContent
 import com.vennilay.kernvox.ui.components.ServerCard
 import com.vennilay.kernvox.ui.state.UiState
+import com.vennilay.kernvox.ui.theme.Spacing
 import com.vennilay.kernvox.ui.utils.formatTimestamp
 import com.vennilay.kernvox.viewmodel.ServersViewModel
 import com.vennilay.kernvox.viewmodel.ServersViewModelFactory
@@ -81,98 +88,79 @@ fun ServersScreen(
             ServersTopAppBar(
                 scrollBehavior = scrollBehavior,
                 onNavigateToSettings = onNavigateToSettings,
-                onRefresh = { viewModel.loadServers() },
             )
         },
     ) { paddingValues ->
-        when (val state = uiState) {
-            is UiState.Loading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
+        AnimatedContent(
+            targetState = uiState,
+            transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(200)) },
+            label = "servers_main_state",
+        ) { state ->
+            when (state) {
+                is UiState.Loading -> LoadingContent(paddingValues = paddingValues)
 
-            is UiState.Error -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    Text(
-                        text = stringResource(R.string.servers_error_title),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = state.message,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    KernvoxButton(onClick = { viewModel.loadServers() }) {
-                        Text(stringResource(R.string.servers_retry))
-                    }
-                }
-            }
+                is UiState.Error -> ErrorContent(
+                    title = stringResource(R.string.servers_error_title),
+                    message = state.message,
+                    retryLabel = stringResource(R.string.servers_retry),
+                    onRetry = { viewModel.loadServers() },
+                    paddingValues = paddingValues,
+                )
 
-            is UiState.Success -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(vertical = 12.dp),
-                ) {
-                    hubOverview?.let { overview ->
-                        item(contentType = "hub_card") {
-                            HubOverviewCard(
-                                hubOverview = overview,
-                                isRefreshing = isRefreshing,
-                            )
+                is UiState.Success -> {
+                    PullToRefreshBox(
+                        isRefreshing = isRefreshing,
+                        onRefresh = { viewModel.loadServers() },
+                        state = rememberPullToRefreshState(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = Spacing.md),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                            contentPadding = PaddingValues(vertical = Spacing.sm),
+                        ) {
+                            hubOverview?.let { overview ->
+                                item(contentType = "hub_card") {
+                                    HubOverviewCard(hubOverview = overview)
+                                }
+                            }
+
+                            item(contentType = "nodes_header") {
+                                SectionHeader(
+                                    title = stringResource(R.string.servers_nodes_title),
+                                    subtitle = stringResource(R.string.servers_nodes_subtitle, servers.size),
+                                )
+                            }
+
+                            if (servers.isEmpty()) {
+                                item(contentType = "empty_state") {
+                                    EmptyState(
+                                        title = stringResource(R.string.servers_empty_title),
+                                        subtitle = stringResource(R.string.servers_no_results_subtitle),
+                                        modifier = Modifier.fillMaxWidth(),
+                                    )
+                                }
+                            } else {
+                                items(
+                                    items = servers,
+                                    key = { it.id },
+                                    contentType = { "server_card" },
+                                ) { server ->
+                                    ServerCard(
+                                        server = server,
+                                        onClick = onServerClick,
+                                    )
+                                }
+                            }
+
+                            item {
+                                Spacer(modifier = Modifier.height(100.dp))
+                            }
                         }
-                    }
-
-                    item(contentType = "nodes_header") {
-                        SectionHeader(
-                            title = stringResource(R.string.servers_nodes_title),
-                            subtitle = stringResource(R.string.servers_nodes_subtitle, servers.size),
-                        )
-                    }
-
-                    if (servers.isEmpty()) {
-                        item(contentType = "empty_state") {
-                            EmptyState(
-                                title = stringResource(R.string.servers_empty_title),
-                                subtitle = stringResource(R.string.servers_no_results_subtitle),
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        }
-                    } else {
-                        items(
-                            items = servers,
-                            key = { it.id },
-                            contentType = { "server_card" },
-                        ) { server ->
-                            ServerCard(
-                                server = server,
-                                onClick = onServerClick,
-                            )
-                        }
-                    }
-
-                    item {
-                        Spacer(modifier = Modifier.height(100.dp))
                     }
                 }
             }
@@ -185,7 +173,6 @@ fun ServersScreen(
 private fun ServersTopAppBar(
     scrollBehavior: androidx.compose.material3.TopAppBarScrollBehavior,
     onNavigateToSettings: () -> Unit,
-    onRefresh: () -> Unit,
 ) {
     TopAppBar(
         title = {
@@ -204,7 +191,7 @@ private fun ServersTopAppBar(
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                 }
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(Spacing.sm))
                 Text(
                     text = stringResource(R.string.servers_hub_title),
                     style = MaterialTheme.typography.titleLarge,
@@ -213,12 +200,6 @@ private fun ServersTopAppBar(
             }
         },
         actions = {
-            IconButton(onClick = onRefresh) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_refresh),
-                    contentDescription = stringResource(R.string.servers_refresh_cd),
-                )
-            }
             IconButton(onClick = onNavigateToSettings) {
                 Icon(
                     painter = painterResource(R.drawable.ic_settings),
@@ -237,7 +218,6 @@ private fun ServersTopAppBar(
 @Composable
 private fun HubOverviewCard(
     hubOverview: HubOverview,
-    isRefreshing: Boolean,
 ) {
     Column(
         modifier = Modifier
@@ -251,57 +231,46 @@ private fun HubOverviewCard(
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(18.dp))
                 .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f))
-                .padding(16.dp),
+                .padding(Spacing.md),
         ) {
-            Column {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    IconCircle(
-                        icon = R.drawable.ic_server_placeholder,
-                        containerSize = 44,
-                        iconSize = 22,
-                        rounded = true,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+            ) {
+                IconCircle(
+                    icon = R.drawable.ic_server_placeholder,
+                    containerSize = 44,
+                    iconSize = 22,
+                    rounded = true,
+                )
+                Column {
+                    Text(
+                        text = hubOverview.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
-                    Column {
-                        Text(
-                            text = hubOverview.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                        Text(
-                            text = stringResource(R.string.servers_hub_subtitle),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    Text(
+                        text = stringResource(R.string.servers_hub_subtitle),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (isRefreshing) {
-            LinearProgressIndicator(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(999.dp)),
-            )
-            Spacer(modifier = Modifier.height(14.dp))
-        }
+        Spacer(modifier = Modifier.height(Spacing.md))
 
         InfoRow(
             label = stringResource(R.string.servers_hub_url_label),
             value = hubOverview.baseUrl,
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(Spacing.sm))
         InfoRow(
             label = stringResource(R.string.servers_hub_host_label),
             value = hubOverview.port?.let { "${hubOverview.host}:$it" } ?: hubOverview.host,
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.md))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -332,7 +301,7 @@ private fun SectionHeader(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 4.dp),
+            .padding(top = Spacing.sm, bottom = Spacing.xs),
     ) {
         Text(
             text = title,
@@ -340,7 +309,7 @@ private fun SectionHeader(
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onBackground,
         )
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(Spacing.xs))
         Text(
             text = subtitle,
             style = MaterialTheme.typography.bodySmall,
@@ -363,7 +332,7 @@ private fun InfoRow(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(Spacing.sm))
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
@@ -383,7 +352,7 @@ private fun HubMetric(
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(modifier = Modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(Spacing.xs))
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
