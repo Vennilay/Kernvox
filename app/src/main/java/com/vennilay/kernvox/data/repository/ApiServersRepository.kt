@@ -1,10 +1,13 @@
 package com.vennilay.kernvox.data.repository
 
+import com.vennilay.kernvox.data.model.MetricEntry
+import com.vennilay.kernvox.data.model.Process
 import com.vennilay.kernvox.data.model.Server
+import com.vennilay.kernvox.data.model.toMetricEntry
+import com.vennilay.kernvox.data.model.toProcess
 import com.vennilay.kernvox.data.model.toServer
 import com.vennilay.kernvox.data.network.KernvoxApiService
-import com.vennilay.kernvox.data.network.dto.MetricEntryDto
-import com.vennilay.kernvox.data.network.dto.ProcessInfoDto
+import io.ktor.client.HttpClient
 import io.ktor.client.network.sockets.ConnectTimeoutException
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.http.HttpStatusCode
@@ -13,6 +16,7 @@ import java.net.UnknownHostException
 
 class ApiServersRepository(
     private val apiService: KernvoxApiService,
+    private val httpClient: HttpClient,
 ) : ServersRepository {
 
     override suspend fun getServers(): List<Server> =
@@ -21,25 +25,38 @@ class ApiServersRepository(
     override suspend fun getServerDetails(serverId: Int): Server =
         safeCall { apiService.getServerDetails(serverId).toServer() }
 
-    override suspend fun getServerProcesses(serverId: Int, limit: Int): List<ProcessInfoDto> =
-        safeCall { apiService.getServerProcesses(serverId, limit).processes }
+    override suspend fun getServerProcesses(serverId: Int, limit: Int): List<Process> =
+        safeCall { apiService.getServerProcesses(serverId, limit).processes.map { it.toProcess() } }
 
     override suspend fun getMetricsHistory(
         serverId: Int,
         from: String?,
         to: String?,
         limit: Int,
-    ): List<MetricEntryDto> =
-        safeCall { apiService.getMetricsHistory(serverId, from, to, limit).metrics }
+    ): List<MetricEntry> =
+        safeCall {
+            apiService.getMetricsHistory(
+                serverId,
+                from,
+                to,
+                limit
+            ).metrics.map { it.toMetricEntry() }
+        }
+
+    fun close() = httpClient.close()
 
     private suspend fun <T> safeCall(block: suspend () -> T): T =
-        try { block() } catch (e: Exception) { throw mapException(e) }
+        try {
+            block()
+        } catch (e: Exception) {
+            throw mapException(e)
+        }
 
     private fun mapException(e: Exception): Exception {
         return when (e) {
             is ConnectTimeoutException,
             is ConnectException,
-            -> ApiException("Таймаут подключения. Проверьте URL сервера.", 0)
+                -> ApiException("Таймаут подключения. Проверьте URL сервера.", 0)
 
             is SocketTimeoutException ->
                 ApiException("Превышено время ожидания ответа от сервера.", 0)
@@ -60,7 +77,10 @@ class ApiServersRepository(
                         ApiException("Сервер не найден.", 404)
 
                     else ->
-                        ApiException("Ошибка сервера: ${status.value} ${status.description}", status.value)
+                        ApiException(
+                            "Ошибка сервера: ${status.value} ${status.description}",
+                            status.value
+                        )
                 }
             }
 
