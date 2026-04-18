@@ -1,12 +1,13 @@
 package com.vennilay.kernvox.viewmodel
 
 import android.app.Application
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.vennilay.kernvox.data.model.Server
-import com.vennilay.kernvox.data.network.HttpClientFactory
-import com.vennilay.kernvox.data.network.KernvoxApiService
+import com.vennilay.kernvox.data.network.dto.MetricEntryDto
+import com.vennilay.kernvox.data.network.dto.ProcessInfoDto
 import com.vennilay.kernvox.data.repository.ApiServersRepository
+import com.vennilay.kernvox.data.repository.RepositoryFactory
 import com.vennilay.kernvox.data.storage.AppSettingsRepository
 import com.vennilay.kernvox.ui.state.UiState
 import kotlinx.coroutines.Job
@@ -21,13 +22,22 @@ import kotlinx.coroutines.launch
 class DetailViewModel(
     private val application: Application,
     private val serverId: Int,
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow<UiState<Server>>(UiState.Loading)
     val uiState: StateFlow<UiState<Server>> = _uiState.asStateFlow()
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    private val _processesState = MutableStateFlow<UiState<List<ProcessInfoDto>>>(UiState.Loading)
+    val processesState: StateFlow<UiState<List<ProcessInfoDto>>> = _processesState.asStateFlow()
+
+    private val _historyState = MutableStateFlow<UiState<List<MetricEntryDto>>>(UiState.Loading)
+    val historyState: StateFlow<UiState<List<MetricEntryDto>>> = _historyState.asStateFlow()
+
+    private val _totalProcesses = MutableStateFlow(0)
+    val totalProcesses: StateFlow<Int> = _totalProcesses.asStateFlow()
 
     private var pollingJob: Job? = null
     private var repository: ApiServersRepository? = null
@@ -38,12 +48,8 @@ class DetailViewModel(
 
     private fun startPolling() {
         viewModelScope.launch {
-            val settingsRepo = AppSettingsRepository(application)
-            val settings = settingsRepo.settings.first()
-            val baseUrl = settings.serverUrl.trimEnd('/')
-            val httpClient = HttpClientFactory.create(baseUrl, settings.apiKey)
-            val apiService = KernvoxApiService(httpClient)
-            repository = ApiServersRepository(apiService)
+            val settings = AppSettingsRepository(application).settings.first()
+            repository = RepositoryFactory.create(settings)
 
             loadDetails(showLoading = true)
 
@@ -73,17 +79,32 @@ class DetailViewModel(
         } finally {
             _isRefreshing.value = false
         }
+
+        viewModelScope.launch {
+            try {
+                val processes = currentRepository.getServerProcesses(serverId)
+                _totalProcesses.value = processes.size
+                _processesState.value = UiState.Success(processes)
+            } catch (e: Exception) {
+                _processesState.value = UiState.Error(e.message ?: "Ошибка загрузки процессов")
+            }
+        }
+
+        viewModelScope.launch {
+            try {
+                val history = currentRepository.getMetricsHistory(serverId, limit = 50)
+                _historyState.value = UiState.Success(history)
+            } catch (e: Exception) {
+                _historyState.value = UiState.Error(e.message ?: "Ошибка загрузки истории")
+            }
+        }
     }
 
     fun refresh() {
         viewModelScope.launch {
             if (repository == null) {
-                val settingsRepo = AppSettingsRepository(application)
-                val settings = settingsRepo.settings.first()
-                val baseUrl = settings.serverUrl.trimEnd('/')
-                val httpClient = HttpClientFactory.create(baseUrl, settings.apiKey)
-                val apiService = KernvoxApiService(httpClient)
-                repository = ApiServersRepository(apiService)
+                val settings = AppSettingsRepository(application).settings.first()
+                repository = RepositoryFactory.create(settings)
             }
             loadDetails(showLoading = _uiState.value !is UiState.Success)
         }

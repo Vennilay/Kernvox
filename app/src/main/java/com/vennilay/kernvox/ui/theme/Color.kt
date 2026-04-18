@@ -28,6 +28,9 @@ val GreenSuccess = Color(0xFF22C55E)
 val GreenSuccessVariant = Color(0xFF16A34A)
 val GreenOnSuccess = Color.White
 
+// Warning
+val AmberWarning = Color(0xFFF59E0B)
+
 // Tertiary
 val Pink80 = Color(0xFFEFB8C8)
 val Pink40 = Color(0xFF7D5260)

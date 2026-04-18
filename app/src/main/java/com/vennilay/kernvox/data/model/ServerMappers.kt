@@ -2,55 +2,50 @@ package com.vennilay.kernvox.data.model
 
 import com.vennilay.kernvox.data.network.dto.DashboardServerDto
 import com.vennilay.kernvox.data.network.dto.ServerDetailsDto
+import java.net.URI
 
-/**
- * Маппинг из DashboardServerDto в domain-модель Server.
- * Используется для списка серверов на главном экране.
- */
 fun DashboardServerDto.toServer(): Server {
     return Server(
         id = id,
         name = name,
         host = host,
         port = 22,
-        isActive = is_active,
-        isAvailable = is_available,
-        cpuPercent = cpu_percent,
-        ramPercent = ram_percent,
-        diskUsedPercent = disk_used_percent,
+        isActive = isActive,
+        isAvailable = isAvailable,
+        cpuPercent = cpuPercent,
+        ramPercent = ramPercent,
+        diskUsedPercent = diskUsedPercent,
+        cpuCores = null,
         uptimeSeconds = null,
         uptimeFormatted = null,
         ramUsedMb = null,
         ramTotalMb = null,
         networkRxBytes = null,
         networkTxBytes = null,
-        lastMetricTimestamp = last_update,
+        lastMetricTimestamp = lastUpdate,
         username = null,
     )
 }
 
-/**
- * Маппинг из ServerDetailsDto в domain-модель Server.
- * Используется для экрана детальной информации.
- */
 fun ServerDetailsDto.toServer(): Server {
     return Server(
         id = id,
         name = name,
         host = host,
         port = port,
-        isActive = is_active,
-        isAvailable = is_available,
-        cpuPercent = cpu_percent,
-        ramPercent = ram_percent,
-        diskUsedPercent = disk_used_percent,
-        uptimeSeconds = uptime_seconds,
-        uptimeFormatted = uptime_formatted,
-        ramUsedMb = ram_used_mb,
-        ramTotalMb = ram_total_mb,
-        networkRxBytes = network_rx_bytes,
-        networkTxBytes = network_tx_bytes,
-        lastMetricTimestamp = last_metric_timestamp,
+        isActive = isActive,
+        isAvailable = isAvailable,
+        cpuPercent = cpuPercent,
+        ramPercent = ramPercent,
+        diskUsedPercent = diskUsedPercent,
+        cpuCores = cpuCores,
+        uptimeSeconds = uptimeSeconds,
+        uptimeFormatted = uptimeFormatted,
+        ramUsedMb = ramUsedMb,
+        ramTotalMb = ramTotalMb,
+        networkRxBytes = networkRxBytes,
+        networkTxBytes = networkTxBytes,
+        lastMetricTimestamp = lastMetricTimestamp,
         username = username,
     )
 }
@@ -61,6 +56,7 @@ fun Server.mergeWith(details: Server): Server {
         cpuPercent = details.cpuPercent ?: cpuPercent,
         ramPercent = details.ramPercent ?: ramPercent,
         diskUsedPercent = details.diskUsedPercent ?: diskUsedPercent,
+        cpuCores = details.cpuCores ?: cpuCores,
         uptimeSeconds = details.uptimeSeconds ?: uptimeSeconds,
         uptimeFormatted = details.uptimeFormatted ?: uptimeFormatted,
         ramUsedMb = details.ramUsedMb ?: ramUsedMb,
@@ -70,5 +66,20 @@ fun Server.mergeWith(details: Server): Server {
         lastMetricTimestamp = details.lastMetricTimestamp ?: lastMetricTimestamp,
         username = details.username ?: username,
         isAvailable = details.isAvailable ?: isAvailable,
+    )
+}
+
+fun List<Server>.toHubOverview(baseUrl: String): HubOverview {
+    val parsedUri = runCatching { URI(baseUrl) }.getOrNull()
+    val host = parsedUri?.host ?: baseUrl.removePrefix("https://").removePrefix("http://")
+    val port = parsedUri?.port?.takeIf { it >= 0 }
+    return HubOverview(
+        name = "KernvoxHub",
+        baseUrl = baseUrl,
+        host = host,
+        port = port,
+        totalNodes = size,
+        availableNodes = count { it.isAvailable == true },
+        lastUpdate = mapNotNull { it.lastMetricTimestamp }.maxOrNull(),
     )
 }

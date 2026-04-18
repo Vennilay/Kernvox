@@ -1,11 +1,14 @@
 package com.vennilay.kernvox.ui.screens.serverDetail
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,42 +16,57 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.PrimaryScrollableTabRow
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import com.vennilay.kernvox.R
 import com.vennilay.kernvox.data.model.Server
+import com.vennilay.kernvox.data.network.dto.MetricEntryDto
+import com.vennilay.kernvox.data.network.dto.ProcessInfoDto
+import com.vennilay.kernvox.ui.components.EmptyState
+import com.vennilay.kernvox.ui.components.ErrorContent
 import com.vennilay.kernvox.ui.components.IconCircle
 import com.vennilay.kernvox.ui.components.InfoTile
-import com.vennilay.kernvox.ui.components.KernvoxButton
+import com.vennilay.kernvox.ui.components.LoadingContent
+import com.vennilay.kernvox.ui.components.MetricHistoryRow
+import com.vennilay.kernvox.ui.components.ProcessItem
 import com.vennilay.kernvox.ui.components.StatusBadge
 import com.vennilay.kernvox.ui.state.UiState
+import com.vennilay.kernvox.ui.theme.Spacing
+import com.vennilay.kernvox.ui.utils.formatBytes
 import com.vennilay.kernvox.ui.utils.formatTimestamp
 import com.vennilay.kernvox.ui.utils.formatUptime
 import com.vennilay.kernvox.viewmodel.DetailViewModel
 import com.vennilay.kernvox.viewmodel.DetailViewModelFactory
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,10 +84,15 @@ fun ServerDetailScreen(
 
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
+    val processesState by viewModel.processesState.collectAsState()
+    val historyState by viewModel.historyState.collectAsState()
+    val totalProcesses by viewModel.totalProcesses.collectAsState()
 
     BackHandler(onBack = onNavigateBack)
 
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val pagerState = rememberPagerState(pageCount = { 3 })
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         modifier = modifier
@@ -78,91 +101,120 @@ fun ServerDetailScreen(
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             ServerDetailTopAppBar(
-                serverName = uiState.let { state ->
-                    if (state is UiState.Success<*>) {
-                        @Suppress("UNCHECKED_CAST")
-                        (state as UiState.Success<Server>).data.name
-                    } else {
-                        ""
-                    }
+                serverName = when (val s = uiState) {
+                    is UiState.Success -> s.data.name
+                    else -> ""
                 },
                 onNavigateBack = onNavigateBack,
                 scrollBehavior = scrollBehavior,
-                onRefresh = { viewModel.refresh() },
-                isRefreshing = isRefreshing,
             )
         },
     ) { paddingValues ->
-        when (val state = uiState) {
-            is UiState.Loading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize().padding(paddingValues),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
+        AnimatedContent(
+            targetState = uiState,
+            transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(200)) },
+            label = "detail_main_state",
+        ) { state ->
+            when (state) {
+                is UiState.Loading -> LoadingContent(paddingValues = paddingValues)
 
-            is UiState.Error -> {
-                Column(
-                    modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    Text(
-                        text = stringResource(R.string.server_detail_loading_error),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = state.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    KernvoxButton(onClick = { viewModel.refresh() }) {
-                        Text(stringResource(R.string.server_detail_retry))
-                    }
-                }
-            }
-
-            is UiState.Success<*> -> {
-                @Suppress("UNCHECKED_CAST")
-                ServerDetailContent(
-                    server = (state as UiState.Success<Server>).data,
+                is UiState.Error -> ErrorContent(
+                    title = stringResource(R.string.server_detail_loading_error),
+                    message = state.message,
+                    retryLabel = stringResource(R.string.server_detail_retry),
+                    onRetry = { viewModel.refresh() },
                     paddingValues = paddingValues,
                 )
+
+                is UiState.Success -> {
+                    PullToRefreshBox(
+                        isRefreshing = isRefreshing,
+                        onRefresh = { viewModel.refresh() },
+                        state = rememberPullToRefreshState(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                    ) {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            val tabTitles = listOf(
+                                stringResource(R.string.server_detail_tab_overview),
+                                buildString {
+                                    append(stringResource(R.string.server_detail_tab_processes))
+                                    if (totalProcesses > 0) append(" ($totalProcesses)")
+                                },
+                                stringResource(R.string.server_detail_tab_history),
+                            )
+
+                            PrimaryScrollableTabRow(
+                                selectedTabIndex = pagerState.currentPage,
+                                edgePadding = Spacing.md,
+                                divider = {},
+                            ) {
+                                tabTitles.forEachIndexed { index, title ->
+                                    Tab(
+                                        selected = pagerState.currentPage == index,
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                pagerState.animateScrollToPage(index)
+                                            }
+                                        },
+                                        text = { Text(title, maxLines = 1) },
+                                    )
+                                }
+                            }
+
+                            HorizontalPager(
+                                state = pagerState,
+                                modifier = Modifier.fillMaxSize(),
+                                userScrollEnabled = true,
+                            ) { page ->
+                                when (page) {
+                                    0 -> OverviewTab(server = state.data)
+                                    1 -> ProcessesTab(
+                                        processesState = processesState,
+                                        onRetry = { viewModel.refresh() },
+                                    )
+                                    2 -> HistoryTab(
+                                        historyState = historyState,
+                                        onRetry = { viewModel.refresh() },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ServerDetailContent(
-    server: Server,
-    paddingValues: androidx.compose.foundation.layout.PaddingValues,
-) {
+private fun OverviewTab(server: Server) {
     val ramUnit = stringResource(R.string.server_detail_ram_unit)
     val daysUnit = stringResource(R.string.time_days)
     val hoursUnit = stringResource(R.string.time_hours)
     val minutesUnit = stringResource(R.string.time_minutes)
+    val kbUnit = stringResource(R.string.network_bytes_kb)
+    val mbUnit = stringResource(R.string.network_bytes_mb)
+    val gbUnit = stringResource(R.string.network_bytes_gb)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(paddingValues)
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .padding(Spacing.md),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.md))
         ServerHeader(server = server)
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(Spacing.lg))
 
         InfoTile(
             label = stringResource(R.string.server_detail_address),
             value = "${server.host}:${server.port}",
             icon = R.drawable.ic_location,
         )
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(Spacing.sm))
 
         server.username?.let { username ->
             InfoTile(
@@ -170,7 +222,16 @@ private fun ServerDetailContent(
                 value = username,
                 icon = R.drawable.ic_server_placeholder,
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Spacing.sm))
+        }
+
+        server.cpuCores?.let { cores ->
+            InfoTile(
+                label = stringResource(R.string.server_detail_cpu_cores),
+                value = cores.toString(),
+                icon = R.drawable.ic_monitoring,
+            )
+            Spacer(modifier = Modifier.height(Spacing.sm))
         }
 
         server.cpuPercent?.let { cpu ->
@@ -179,7 +240,7 @@ private fun ServerDetailContent(
                 value = "%.1f%%".format(cpu),
                 icon = R.drawable.ic_monitoring,
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Spacing.sm))
         }
 
         if (server.ramUsedMb != null && server.ramTotalMb != null) {
@@ -192,7 +253,7 @@ private fun ServerDetailContent(
                 ),
                 icon = R.drawable.ic_monitoring,
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Spacing.sm))
         }
 
         server.diskUsedPercent?.let { disk ->
@@ -201,7 +262,22 @@ private fun ServerDetailContent(
                 value = "%.1f%%".format(disk),
                 icon = R.drawable.ic_server_placeholder,
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(Spacing.sm))
+        }
+
+        if (server.networkRxBytes != null || server.networkTxBytes != null) {
+            InfoTile(
+                label = stringResource(R.string.server_detail_network_rx),
+                value = formatBytes(server.networkRxBytes, kbUnit, mbUnit, gbUnit),
+                icon = R.drawable.ic_monitoring,
+            )
+            Spacer(modifier = Modifier.height(Spacing.sm))
+            InfoTile(
+                label = stringResource(R.string.server_detail_network_tx),
+                value = formatBytes(server.networkTxBytes, kbUnit, mbUnit, gbUnit),
+                icon = R.drawable.ic_monitoring,
+            )
+            Spacer(modifier = Modifier.height(Spacing.sm))
         }
 
         server.uptimeFormatted?.let { uptime ->
@@ -218,7 +294,7 @@ private fun ServerDetailContent(
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(Spacing.sm))
 
         server.lastMetricTimestamp?.let { ts ->
             InfoTile(
@@ -226,6 +302,105 @@ private fun ServerDetailContent(
                 value = formatTimestamp(ts),
                 icon = R.drawable.ic_quickview,
             )
+        }
+
+        Spacer(modifier = Modifier.height(Spacing.xl))
+    }
+}
+
+@Composable
+private fun ProcessesTab(
+    processesState: UiState<List<ProcessInfoDto>>,
+    onRetry: () -> Unit,
+) {
+    AnimatedContent(
+        targetState = processesState,
+        transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(200)) },
+        label = "processes_state",
+    ) { state ->
+        when (state) {
+            is UiState.Loading -> LoadingContent(paddingValues = PaddingValues(Spacing.md))
+
+            is UiState.Error -> ErrorContent(
+                title = stringResource(R.string.processes_error_title),
+                message = state.message,
+                retryLabel = stringResource(R.string.processes_retry),
+                onRetry = onRetry,
+                paddingValues = PaddingValues(Spacing.md),
+            )
+
+            is UiState.Success -> {
+                if (state.data.isEmpty()) {
+                    EmptyState(
+                        title = stringResource(R.string.processes_empty_title),
+                        subtitle = stringResource(R.string.processes_empty_subtitle),
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(vertical = Spacing.sm),
+                    ) {
+                        items(
+                            items = state.data,
+                            key = { it.pid },
+                            contentType = { "process_item" },
+                        ) { process ->
+                            ProcessItem(process = process)
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outlineVariant,
+                                thickness = androidx.compose.ui.unit.Dp.Hairline,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryTab(
+    historyState: UiState<List<MetricEntryDto>>,
+    onRetry: () -> Unit,
+) {
+    AnimatedContent(
+        targetState = historyState,
+        transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(200)) },
+        label = "history_state",
+    ) { state ->
+        when (state) {
+            is UiState.Loading -> LoadingContent(paddingValues = PaddingValues(Spacing.md))
+
+            is UiState.Error -> ErrorContent(
+                title = stringResource(R.string.history_error_title),
+                message = state.message,
+                retryLabel = stringResource(R.string.history_retry),
+                onRetry = onRetry,
+                paddingValues = PaddingValues(Spacing.md),
+            )
+
+            is UiState.Success -> {
+                if (state.data.isEmpty()) {
+                    EmptyState(
+                        title = stringResource(R.string.history_empty_title),
+                        subtitle = stringResource(R.string.history_empty_subtitle),
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(Spacing.md),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                    ) {
+                        items(
+                            items = state.data.asReversed(),
+                            key = { it.id },
+                            contentType = { "history_row" },
+                        ) { entry ->
+                            MetricHistoryRow(entry = entry)
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -236,50 +411,32 @@ private fun ServerDetailTopAppBar(
     serverName: String,
     onNavigateBack: () -> Unit,
     scrollBehavior: androidx.compose.material3.TopAppBarScrollBehavior,
-    onRefresh: () -> Unit,
-    isRefreshing: Boolean,
 ) {
-    Column {
-        TopAppBar(
-            title = {
-                Text(
-                    text = serverName,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                )
-            },
-            navigationIcon = {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_back),
-                        contentDescription = stringResource(R.string.back_button),
-                        tint = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
-            },
-            actions = {
-                IconButton(onClick = onRefresh) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_refresh),
-                        contentDescription = stringResource(R.string.server_detail_refresh_cd),
-                    )
-                }
-            },
-            scrollBehavior = scrollBehavior,
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.background,
-                scrolledContainerColor = MaterialTheme.colorScheme.surface,
-            ),
-        )
-
-        if (isRefreshing) {
-            LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth(),
+    TopAppBar(
+        title = {
+            Text(
+                text = serverName,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
-        }
-    }
+        },
+        navigationIcon = {
+            IconButton(onClick = onNavigateBack) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_back),
+                    contentDescription = stringResource(R.string.back_button),
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+        },
+        scrollBehavior = scrollBehavior,
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.background,
+            scrolledContainerColor = MaterialTheme.colorScheme.surface,
+        ),
+    )
 }
 
 @Composable
@@ -291,14 +448,14 @@ private fun ServerHeader(server: Server) {
             iconSize = 40,
             rounded = true,
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.md))
         Text(
             text = server.name,
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(Spacing.sm))
         StatusBadge(isOnline = server.isAvailable ?: false)
     }
 }

@@ -1,5 +1,9 @@
 package com.vennilay.kernvox.ui.screens.home
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,6 +26,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,92 +45,93 @@ import com.vennilay.kernvox.R
 import com.vennilay.kernvox.ui.components.IconCircle
 import com.vennilay.kernvox.ui.components.KernvoxButton
 import com.vennilay.kernvox.ui.theme.KernvoxTheme
+import com.vennilay.kernvox.ui.theme.Spacing
 
-/**
- * Экран приветствия с информацией о приложении.
- *
- * @param onOpenApp Обработчик нажатия на кнопку перехода к серверам
- * @param modifier Модификатор для компонента
- */
 @Composable
 fun HomeScreen(
     onOpenApp: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        contentWindowInsets = WindowInsets.safeDrawing
+        contentWindowInsets = WindowInsets.safeDrawing,
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(MaterialTheme.colorScheme.background),
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp)
-                    .padding(top = 24.dp, bottom = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            AnimatedVisibility(
+                visible = visible,
+                enter = slideInVertically(
+                    initialOffsetY = { it / 4 },
+                    animationSpec = tween(400),
+                ) + fadeIn(tween(400)),
             ) {
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Логотип/Иконка приложения
-                IconCircle(
-                    icon = R.drawable.ic_server_placeholder,
-                    containerSize = 120,
-                    iconSize = 60,
-                    rounded = true
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Заголовок
-                Text(
-                    text = stringResource(R.string.home_welcome_title),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Карточка с описанием
-                InfoCard()
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Список возможностей
-                FeaturesList()
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Кнопка
-                KernvoxButton(
-                    onClick = onOpenApp,
-                    modifier = Modifier.widthIn(max = 400.dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = Spacing.lg)
+                        .padding(top = Spacing.lg, bottom = Spacing.lg),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_server_placeholder),
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = stringResource(R.string.home_open_app_button),
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
-                }
+                    Spacer(modifier = Modifier.height(Spacing.xl))
 
-                Spacer(modifier = Modifier.height(24.dp))
+                    IconCircle(
+                        icon = R.drawable.ic_server_placeholder,
+                        containerSize = 120,
+                        iconSize = 60,
+                        rounded = true,
+                    )
+
+                    Spacer(modifier = Modifier.height(Spacing.lg))
+
+                    Text(
+                        text = stringResource(R.string.home_welcome_title),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center,
+                    )
+
+                    Spacer(modifier = Modifier.height(Spacing.xl))
+
+                    InfoCard()
+
+                    Spacer(modifier = Modifier.height(Spacing.lg))
+
+                    FeaturesList()
+
+                    Spacer(modifier = Modifier.height(Spacing.xl))
+
+                    KernvoxButton(
+                        onClick = onOpenApp,
+                        modifier = Modifier.widthIn(max = 400.dp),
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_server_placeholder),
+                                contentDescription = null,
+                                modifier = Modifier.size(Spacing.md),
+                            )
+                            Spacer(modifier = Modifier.width(Spacing.sm))
+                            Text(
+                                text = stringResource(R.string.home_open_app_button),
+                                style = MaterialTheme.typography.labelLarge,
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(Spacing.lg))
+                }
             }
         }
     }
@@ -134,21 +144,21 @@ private fun InfoCard() {
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 16.dp, vertical = 20.dp)
+            .padding(horizontal = Spacing.md, vertical = 20.dp),
     ) {
         Column {
             Text(
                 text = stringResource(R.string.home_description_line_1),
                 style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 24.sp),
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Spacing.sm))
 
             Text(
                 text = stringResource(R.string.home_description_line_2),
                 style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 24.sp),
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
     }
@@ -158,28 +168,28 @@ private fun InfoCard() {
 private fun FeaturesList() {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
     ) {
         Text(
             text = stringResource(R.string.home_features_title),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         FeatureItem(
             icon = R.drawable.ic_monitoring,
-            text = stringResource(R.string.home_feature_monitoring)
+            text = stringResource(R.string.home_feature_monitoring),
         )
 
         FeatureItem(
             icon = R.drawable.ic_uptime,
-            text = stringResource(R.string.home_feature_uptime)
+            text = stringResource(R.string.home_feature_uptime),
         )
 
         FeatureItem(
             icon = R.drawable.ic_quickview,
-            text = stringResource(R.string.home_feature_quickview)
+            text = stringResource(R.string.home_feature_quickview),
         )
     }
 }
@@ -187,29 +197,29 @@ private fun FeaturesList() {
 @Composable
 private fun FeatureItem(
     icon: Int,
-    text: String
+    text: String,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.small)
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = Spacing.md, vertical = Spacing.sm + Spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         IconCircle(
             icon = icon,
             containerSize = 36,
             iconSize = 18,
-            rounded = false
+            rounded = false,
         )
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(Spacing.sm))
 
         Text(
             text = text,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }

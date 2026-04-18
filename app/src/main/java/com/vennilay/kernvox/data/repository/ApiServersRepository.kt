@@ -15,52 +15,26 @@ class ApiServersRepository(
     private val apiService: KernvoxApiService,
 ) : ServersRepository {
 
-    override suspend fun getServers(): List<Server> {
-        return try {
-            val dashboard = apiService.getDashboard()
-            dashboard.servers.map { it.toServer() }
-        } catch (e: Exception) {
-            throw mapException(e)
-        }
-    }
+    override suspend fun getServers(): List<Server> =
+        safeCall { apiService.getDashboard().servers.map { it.toServer() } }
 
-    override suspend fun getServerDetails(serverId: Int): Server {
-        return try {
-            apiService.getServerDetails(serverId).toServer()
-        } catch (e: Exception) {
-            throw mapException(e)
-        }
-    }
+    override suspend fun getServerDetails(serverId: Int): Server =
+        safeCall { apiService.getServerDetails(serverId).toServer() }
 
-    override suspend fun getServerProcesses(
-        serverId: Int,
-        limit: Int,
-    ): List<ProcessInfoDto> {
-        return try {
-            val response = apiService.getServerProcesses(serverId, limit)
-            response.processes
-        } catch (e: Exception) {
-            throw mapException(e)
-        }
-    }
+    override suspend fun getServerProcesses(serverId: Int, limit: Int): List<ProcessInfoDto> =
+        safeCall { apiService.getServerProcesses(serverId, limit).processes }
 
     override suspend fun getMetricsHistory(
         serverId: Int,
         from: String?,
         to: String?,
         limit: Int,
-    ): List<MetricEntryDto> {
-        return try {
-            val response = apiService.getMetricsHistory(serverId, from, to, limit)
-            response.metrics
-        } catch (e: Exception) {
-            throw mapException(e)
-        }
-    }
+    ): List<MetricEntryDto> =
+        safeCall { apiService.getMetricsHistory(serverId, from, to, limit).metrics }
 
-    /**
-     * Маппинг сетевых исключений в понятные сообщения об ошибках.
-     */
+    private suspend fun <T> safeCall(block: suspend () -> T): T =
+        try { block() } catch (e: Exception) { throw mapException(e) }
+
     private fun mapException(e: Exception): Exception {
         return when (e) {
             is ConnectTimeoutException,
@@ -101,9 +75,6 @@ class ApiServersRepository(
     }
 }
 
-/**
- * Исключение API с кодом ошибки.
- */
 class ApiException(
     message: String,
     val code: Int,

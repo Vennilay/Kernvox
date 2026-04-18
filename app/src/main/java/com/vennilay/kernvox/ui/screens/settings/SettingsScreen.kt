@@ -1,5 +1,6 @@
 package com.vennilay.kernvox.ui.screens.settings
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -14,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -35,11 +37,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vennilay.kernvox.R
 import com.vennilay.kernvox.ui.components.KernvoxButton
 import com.vennilay.kernvox.ui.state.UiState
+import com.vennilay.kernvox.ui.theme.GreenSuccess
+import com.vennilay.kernvox.ui.theme.Spacing
 import com.vennilay.kernvox.viewmodel.SettingsViewModel
 import com.vennilay.kernvox.viewmodel.SettingsViewModelFactory
 
@@ -59,9 +62,12 @@ fun SettingsScreen(
 
     var serverUrl by remember { mutableStateOf("") }
     var apiKey by remember { mutableStateOf("") }
+    var urlError by remember { mutableStateOf(false) }
+
+    val isSaving = settingsState is UiState.Loading
 
     LaunchedEffect(settingsState) {
-        if (settingsState is UiState.Success) {
+        if (settingsState is UiState.Success && serverUrl.isEmpty() && apiKey.isEmpty()) {
             val settings = (settingsState as UiState.Success).data
             serverUrl = settings.serverUrl
             apiKey = settings.apiKey
@@ -102,10 +108,10 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = Spacing.md)
                 .verticalScroll(rememberScrollState()),
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Spacing.md))
 
             Text(
                 text = stringResource(R.string.settings_section_title),
@@ -114,7 +120,7 @@ fun SettingsScreen(
                 color = MaterialTheme.colorScheme.onBackground,
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Spacing.sm))
 
             Text(
                 text = stringResource(R.string.settings_description),
@@ -122,19 +128,26 @@ fun SettingsScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(Spacing.lg))
 
             OutlinedTextField(
                 value = serverUrl,
-                onValueChange = { serverUrl = it },
+                onValueChange = {
+                    serverUrl = it
+                    urlError = false
+                },
                 label = { Text(stringResource(R.string.settings_server_url_label)) },
                 placeholder = { Text(stringResource(R.string.settings_server_url_placeholder)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
+                isError = urlError,
+                supportingText = if (urlError) {
+                    { Text(stringResource(R.string.settings_url_error)) }
+                } else null,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Spacing.md))
 
             OutlinedTextField(
                 value = apiKey,
@@ -147,12 +160,26 @@ fun SettingsScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(Spacing.lg))
+
+            AnimatedVisibility(visible = isSaving) {
+                Column {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    Spacer(modifier = Modifier.height(Spacing.md))
+                }
+            }
 
             KernvoxButton(
                 onClick = {
-                    viewModel.saveSettings(serverUrl.trim(), apiKey.trim())
+                    val url = serverUrl.trim()
+                    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                        urlError = true
+                    } else {
+                        urlError = false
+                        viewModel.saveSettings(url, apiKey.trim())
+                    }
                 },
+                enabled = !isSaving,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(R.string.settings_save_button))
@@ -160,16 +187,16 @@ fun SettingsScreen(
 
             when (settingsState) {
                 is UiState.Success -> {
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(Spacing.md))
                     Text(
-                        text = stringResource(R.string.settings_saved_message),
+                        text = stringResource(R.string.settings_saved_ok),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = GreenSuccess,
                     )
                 }
 
                 is UiState.Error -> {
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(Spacing.md))
                     Text(
                         text = (settingsState as UiState.Error).message,
                         style = MaterialTheme.typography.bodySmall,
