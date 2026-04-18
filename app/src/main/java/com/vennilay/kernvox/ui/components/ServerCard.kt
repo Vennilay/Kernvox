@@ -37,9 +37,11 @@ fun ServerCard(
     val minutesUnit = stringResource(R.string.time_minutes)
     val secondsUnit = stringResource(R.string.time_seconds)
 
-    val uptimeFormatted = remember(server.uptimeSeconds, daysUnit, hoursUnit, minutesUnit, secondsUnit) {
-        server.uptimeSeconds?.toLong()?.let { formatUptime(it, daysUnit, hoursUnit, minutesUnit, secondsUnit) } ?: noData
-    }
+    val uptimeFormatted =
+        remember(server.uptimeSeconds, daysUnit, hoursUnit, minutesUnit, secondsUnit) {
+            server.uptimeSeconds?.toLong()
+                ?.let { formatUptime(it, daysUnit, hoursUnit, minutesUnit, secondsUnit) } ?: noData
+        }
     val lastCheckedFormatted = remember(server.lastMetricTimestamp) {
         server.lastMetricTimestamp?.let { formatTimestamp(it) } ?: noData
     }
@@ -60,7 +62,9 @@ fun ServerCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         onClick = { onClick?.invoke(server) },
     ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(Spacing.md)) {
+        Column(modifier = Modifier
+            .fillMaxWidth()
+            .padding(Spacing.md)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,

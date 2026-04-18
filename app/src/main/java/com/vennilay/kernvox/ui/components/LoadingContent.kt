@@ -15,7 +15,9 @@ fun LoadingContent(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier.fillMaxSize().padding(paddingValues),
+        modifier = modifier
+            .fillMaxSize()
+            .padding(paddingValues),
         contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator()

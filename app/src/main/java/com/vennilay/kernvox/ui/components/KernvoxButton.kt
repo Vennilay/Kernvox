@@ -22,7 +22,9 @@ fun KernvoxButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 56.dp).fillMaxWidth(),
+        modifier = modifier
+            .heightIn(min = 56.dp)
+            .fillMaxWidth(),
         enabled = enabled,
         shape = MaterialTheme.shapes.medium,
         colors = ButtonDefaults.buttonColors(

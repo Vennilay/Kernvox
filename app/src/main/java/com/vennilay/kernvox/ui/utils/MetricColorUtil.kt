@@ -9,7 +9,7 @@ import com.vennilay.kernvox.ui.theme.GreenSuccess
 @Composable
 fun metricColor(value: Float?): Color = when {
     value == null -> MaterialTheme.colorScheme.onSurfaceVariant
-    value < 60f   -> GreenSuccess
-    value < 80f   -> AmberWarning
-    else          -> MaterialTheme.colorScheme.error
+    value < 60f -> GreenSuccess
+    value < 80f -> AmberWarning
+    else -> MaterialTheme.colorScheme.error
 }
