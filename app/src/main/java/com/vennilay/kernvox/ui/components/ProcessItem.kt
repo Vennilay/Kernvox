@@ -14,12 +14,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.vennilay.kernvox.data.network.dto.ProcessInfoDto
+import com.vennilay.kernvox.data.model.Process
 import com.vennilay.kernvox.ui.theme.Spacing
 
 @Composable
 fun ProcessItem(
-    process: ProcessInfoDto,
+    process: Process,
     modifier: Modifier = Modifier,
 ) {
     Row(
