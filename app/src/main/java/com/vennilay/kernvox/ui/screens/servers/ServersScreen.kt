@@ -49,7 +49,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.vennilay.kernvox.R
 import com.vennilay.kernvox.data.model.HubOverview
 import com.vennilay.kernvox.data.model.Server
@@ -253,6 +252,5 @@ private fun SectionHeader(label: String) {
         text = label,
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        letterSpacing = 0.5.sp,
     )
 }
