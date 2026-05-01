@@ -94,19 +94,19 @@ fun ServerCard(
             if (isOnline) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     InlineMetric(
-                        label = "CPU",
+                        label = stringResource(R.string.server_card_cpu_label),
                         value = cpuFormatted,
                         rawValue = server.cpuPercent,
                     )
                     MetricDivider()
                     InlineMetric(
-                        label = "RAM",
+                        label = stringResource(R.string.server_card_ram_label),
                         value = ramFormatted,
                         rawValue = server.ramPercent,
                     )
                     MetricDivider()
                     InlineMetric(
-                        label = "Disk",
+                        label = stringResource(R.string.server_card_disk_label),
                         value = diskFormatted,
                         rawValue = server.diskUsedPercent,
                     )
