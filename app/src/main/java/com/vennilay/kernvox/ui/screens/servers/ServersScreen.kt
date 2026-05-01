@@ -37,6 +37,7 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,7 +45,10 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.vennilay.kernvox.R
 import com.vennilay.kernvox.data.model.HubOverview
@@ -55,6 +59,7 @@ import com.vennilay.kernvox.ui.components.IconCircle
 import com.vennilay.kernvox.ui.components.LoadingContent
 import com.vennilay.kernvox.ui.components.ServerCard
 import com.vennilay.kernvox.ui.state.UiState
+import com.vennilay.kernvox.ui.theme.GreenSuccess
 import com.vennilay.kernvox.ui.theme.Spacing
 import com.vennilay.kernvox.ui.utils.formatTimestamp
 import com.vennilay.kernvox.viewmodel.ServersViewModel
@@ -87,6 +92,7 @@ fun ServersScreen(
             ServersTopAppBar(
                 scrollBehavior = scrollBehavior,
                 onNavigateToSettings = onNavigateToSettings,
+                hubOverview = hubOverview,
             )
         },
     ) { paddingValues ->
@@ -176,30 +182,36 @@ fun ServersScreen(
 private fun ServersTopAppBar(
     scrollBehavior: androidx.compose.material3.TopAppBarScrollBehavior,
     onNavigateToSettings: () -> Unit,
+    hubOverview: HubOverview?,
 ) {
     TopAppBar(
         title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_server_placeholder),
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_server_placeholder),
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(Spacing.sm))
+                    Text(
+                        text = stringResource(R.string.servers_hub_title),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
-                Spacer(modifier = Modifier.width(Spacing.sm))
-                Text(
-                    text = stringResource(R.string.servers_hub_title),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                )
+                if (hubOverview != null) {
+                    HubSubtitle(hubOverview = hubOverview)
+                }
             }
         },
         actions = {
@@ -215,6 +227,28 @@ private fun ServersTopAppBar(
             containerColor = MaterialTheme.colorScheme.background,
             scrolledContainerColor = MaterialTheme.colorScheme.surface,
         ),
+    )
+}
+
+@Composable
+private fun HubSubtitle(hubOverview: HubOverview) {
+    val lastSync = remember(hubOverview.lastUpdate) {
+        hubOverview.lastUpdate?.let { formatTimestamp(it) }
+    }
+    val text = buildAnnotatedString {
+        withStyle(SpanStyle(color = GreenSuccess, fontWeight = FontWeight.SemiBold)) {
+            append(hubOverview.availableNodes.toString())
+        }
+        append(" / ${hubOverview.totalNodes} online")
+        if (lastSync != null) {
+            append(" · синк $lastSync")
+        }
+    }
+    Text(
+        modifier = Modifier.padding(start = 40.dp),
+        text = text,
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
 
