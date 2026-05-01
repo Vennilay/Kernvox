@@ -235,17 +235,19 @@ private fun HubSubtitle(hubOverview: HubOverview) {
     val lastSync = remember(hubOverview.lastUpdate) {
         hubOverview.lastUpdate?.let { formatTimestamp(it) }
     }
-    val text = buildAnnotatedString {
-        withStyle(SpanStyle(color = GreenSuccess, fontWeight = FontWeight.SemiBold)) {
-            append(hubOverview.availableNodes.toString())
-        }
-        append(" / ${hubOverview.totalNodes} online")
-        if (lastSync != null) {
-            append(" · синк $lastSync")
+    val text = remember(hubOverview.availableNodes, hubOverview.totalNodes, lastSync) {
+        buildAnnotatedString {
+            withStyle(SpanStyle(color = GreenSuccess, fontWeight = FontWeight.SemiBold)) {
+                append(hubOverview.availableNodes.toString())
+            }
+            append(" / ${hubOverview.totalNodes} online")
+            if (lastSync != null) {
+                append(" · синк $lastSync")
+            }
         }
     }
     Text(
-        modifier = Modifier.padding(start = 40.dp),
+        modifier = Modifier.padding(start = 32.dp + Spacing.sm),
         text = text,
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
