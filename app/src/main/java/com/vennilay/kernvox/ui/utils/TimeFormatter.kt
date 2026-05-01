@@ -35,9 +35,9 @@ fun formatBytes(bytes: Float?, kbUnit: String, mbUnit: String, gbUnit: String): 
     if (bytes == null) return "—"
     return when {
         bytes >= 1_073_741_824f -> "${"%.1f".format(bytes / 1_073_741_824f)} $gbUnit"
-        bytes >= 1_048_576f     -> "${"%.1f".format(bytes / 1_048_576f)} $mbUnit"
-        bytes >= 1024f          -> "${"%.0f".format(bytes / 1024f)} $kbUnit"
-        else                    -> "${"%.0f".format(bytes)} Б"
+        bytes >= 1_048_576f -> "${"%.1f".format(bytes / 1_048_576f)} $mbUnit"
+        bytes >= 1024f -> "${"%.0f".format(bytes / 1024f)} $kbUnit"
+        else -> "${"%.0f".format(bytes)} Б"
     }
 }
 

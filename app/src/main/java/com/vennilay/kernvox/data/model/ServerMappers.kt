@@ -1,6 +1,8 @@
 package com.vennilay.kernvox.data.model
 
 import com.vennilay.kernvox.data.network.dto.DashboardServerDto
+import com.vennilay.kernvox.data.network.dto.MetricEntryDto
+import com.vennilay.kernvox.data.network.dto.ProcessInfoDto
 import com.vennilay.kernvox.data.network.dto.ServerDetailsDto
 import java.net.URI
 
@@ -68,6 +70,28 @@ fun Server.mergeWith(details: Server): Server {
         isAvailable = details.isAvailable ?: isAvailable,
     )
 }
+
+fun ProcessInfoDto.toProcess(): Process = Process(
+    pid = pid,
+    user = user,
+    cpuPercent = cpuPercent,
+    memoryPercent = memoryPercent,
+    command = command,
+)
+
+fun MetricEntryDto.toMetricEntry(): MetricEntry = MetricEntry(
+    id = id,
+    cpuPercent = cpuPercent,
+    ramUsedMb = ramUsedMb,
+    ramTotalMb = ramTotalMb,
+    ramPercent = ramPercent,
+    diskUsedPercent = diskUsedPercent,
+    networkRxBytes = networkRxBytes,
+    networkTxBytes = networkTxBytes,
+    uptimeSeconds = uptimeSeconds,
+    isAvailable = isAvailable,
+    timestamp = timestamp,
+)
 
 fun List<Server>.toHubOverview(baseUrl: String): HubOverview {
     val parsedUri = runCatching { URI(baseUrl) }.getOrNull()

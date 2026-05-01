@@ -3,6 +3,7 @@ package com.vennilay.kernvox.data.storage
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -14,6 +15,7 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 data class AppSettings(
     val serverUrl: String = "",
     val apiKey: String = "",
+    val hasSeenWelcome: Boolean = false,
 )
 
 class AppSettingsRepository(context: Context) {
@@ -24,6 +26,7 @@ class AppSettingsRepository(context: Context) {
         AppSettings(
             serverUrl = prefs[KEY_SERVER_URL] ?: "",
             apiKey = prefs[KEY_API_KEY] ?: "",
+            hasSeenWelcome = prefs[KEY_HAS_SEEN_WELCOME] ?: false,
         )
     }
 
@@ -34,14 +37,15 @@ class AppSettingsRepository(context: Context) {
         }
     }
 
-    suspend fun clearSettings() {
+    suspend fun markWelcomeSeen() {
         dataStore.edit { prefs ->
-            prefs.clear()
+            prefs[KEY_HAS_SEEN_WELCOME] = true
         }
     }
 
     companion object {
         private val KEY_SERVER_URL = stringPreferencesKey("server_url")
         private val KEY_API_KEY = stringPreferencesKey("api_key")
+        private val KEY_HAS_SEEN_WELCOME = booleanPreferencesKey("has_seen_welcome")
     }
 }

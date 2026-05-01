@@ -1,10 +1,10 @@
 package com.vennilay.kernvox.ui.screens.servers
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -132,7 +132,10 @@ fun ServersScreen(
                             item(contentType = "nodes_header") {
                                 SectionHeader(
                                     title = stringResource(R.string.servers_nodes_title),
-                                    subtitle = stringResource(R.string.servers_nodes_subtitle, servers.size),
+                                    subtitle = stringResource(
+                                        R.string.servers_nodes_subtitle,
+                                        servers.size
+                                    ),
                                 )
                             }
 

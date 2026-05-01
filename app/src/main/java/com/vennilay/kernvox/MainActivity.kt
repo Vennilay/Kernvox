@@ -64,7 +64,7 @@ private fun AppNavHost() {
         }
 
         composable(
-            route = Screen.Detail.routeWithArgs,
+            route = Screen.Detail.route,
             arguments = listOf(
                 navArgument("serverId") { type = NavType.IntType },
             ),
@@ -97,6 +97,5 @@ sealed class Screen(val route: String) {
     data object Settings : Screen("settings")
     data object Detail : Screen("detail/{serverId}") {
         fun createRoute(serverId: Int) = "detail/$serverId"
-        const val routeWithArgs = "detail/{serverId}"
     }
 }

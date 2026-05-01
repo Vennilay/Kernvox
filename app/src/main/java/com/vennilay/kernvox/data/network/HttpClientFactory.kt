@@ -1,18 +1,18 @@
 package com.vennilay.kernvox.data.network
 
+import com.vennilay.kernvox.BuildConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.request.header
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.request.header
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
-import java.util.concurrent.TimeUnit
 
 object HttpClientFactory {
     fun create(
@@ -20,13 +20,6 @@ object HttpClientFactory {
         apiKey: String = "",
     ): HttpClient {
         return HttpClient(OkHttp) {
-            engine {
-                config {
-                    connectTimeout(15_000, TimeUnit.MILLISECONDS)
-                    readTimeout(30_000, TimeUnit.MILLISECONDS)
-                }
-            }
-
             install(HttpTimeout) {
                 connectTimeoutMillis = 15_000
                 requestTimeoutMillis = 30_000
@@ -52,8 +45,10 @@ object HttpClientFactory {
                 )
             }
 
-            install(Logging) {
-                level = LogLevel.INFO
+            if (BuildConfig.DEBUG) {
+                install(Logging) {
+                    level = LogLevel.INFO
+                }
             }
         }
     }

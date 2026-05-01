@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vennilay.kernvox.R
-import com.vennilay.kernvox.ui.components.IconCircle
 
 /**
  * Компонент пустого состояния для отображения, когда список серверов пуст.

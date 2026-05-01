@@ -3,9 +3,9 @@ package com.vennilay.kernvox.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.vennilay.kernvox.data.model.MetricEntry
+import com.vennilay.kernvox.data.model.Process
 import com.vennilay.kernvox.data.model.Server
-import com.vennilay.kernvox.data.network.dto.MetricEntryDto
-import com.vennilay.kernvox.data.network.dto.ProcessInfoDto
 import com.vennilay.kernvox.data.repository.ApiServersRepository
 import com.vennilay.kernvox.data.repository.RepositoryFactory
 import com.vennilay.kernvox.data.storage.AppSettingsRepository
@@ -30,11 +30,11 @@ class DetailViewModel(
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
-    private val _processesState = MutableStateFlow<UiState<List<ProcessInfoDto>>>(UiState.Loading)
-    val processesState: StateFlow<UiState<List<ProcessInfoDto>>> = _processesState.asStateFlow()
+    private val _processesState = MutableStateFlow<UiState<List<Process>>>(UiState.Loading)
+    val processesState: StateFlow<UiState<List<Process>>> = _processesState.asStateFlow()
 
-    private val _historyState = MutableStateFlow<UiState<List<MetricEntryDto>>>(UiState.Loading)
-    val historyState: StateFlow<UiState<List<MetricEntryDto>>> = _historyState.asStateFlow()
+    private val _historyState = MutableStateFlow<UiState<List<MetricEntry>>>(UiState.Loading)
+    val historyState: StateFlow<UiState<List<MetricEntry>>> = _historyState.asStateFlow()
 
     private val _totalProcesses = MutableStateFlow(0)
     val totalProcesses: StateFlow<Int> = _totalProcesses.asStateFlow()
@@ -113,5 +113,6 @@ class DetailViewModel(
     override fun onCleared() {
         super.onCleared()
         pollingJob?.cancel()
+        repository?.close()
     }
 }

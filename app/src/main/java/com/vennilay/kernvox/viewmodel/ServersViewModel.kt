@@ -12,9 +12,12 @@ import com.vennilay.kernvox.data.storage.AppSettings
 import com.vennilay.kernvox.data.storage.AppSettingsRepository
 import com.vennilay.kernvox.ui.state.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class ServersViewModel(
@@ -22,22 +25,21 @@ class ServersViewModel(
 ) : AndroidViewModel(application) {
 
     private val settingsRepository = AppSettingsRepository(application)
-    private lateinit var serversRepository: ApiServersRepository
+    private var serversRepository: ApiServersRepository? = null
 
     private val _uiState = MutableStateFlow<UiState<List<Server>>>(UiState.Loading)
     val uiState: StateFlow<UiState<List<Server>>> = _uiState.asStateFlow()
 
-    private val _servers = MutableStateFlow<List<Server>>(emptyList())
-    val servers: StateFlow<List<Server>> = _servers.asStateFlow()
+    // Derived from uiState — единственный источник истины, нет рассинхронизации
+    val servers: StateFlow<List<Server>> = _uiState
+        .map { (it as? UiState.Success)?.data.orEmpty() }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private val _hubOverview = MutableStateFlow<HubOverview?>(null)
     val hubOverview: StateFlow<HubOverview?> = _hubOverview.asStateFlow()
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
-
-    private val _isConfigured = MutableStateFlow(false)
-    val isConfigured: StateFlow<Boolean> = _isConfigured.asStateFlow()
 
     private var currentSettings = AppSettings()
 
@@ -52,14 +54,14 @@ class ServersViewModel(
                 .collect { settings ->
                     currentSettings = settings
                     val hasConfig = settings.serverUrl.isNotBlank() && settings.apiKey.isNotBlank()
-                    _isConfigured.value = hasConfig
 
                     if (hasConfig) {
+                        serversRepository?.close()
                         serversRepository = RepositoryFactory.create(settings)
-                        _hubOverview.value = _servers.value.toHubOverview(settings.serverUrl.trimEnd('/'))
                         loadServers()
                     } else {
-                        _servers.value = emptyList()
+                        serversRepository?.close()
+                        serversRepository = null
                         _hubOverview.value = null
                         _isRefreshing.value = false
                         _uiState.value = UiState.Error(
@@ -71,24 +73,29 @@ class ServersViewModel(
     }
 
     fun loadServers() {
-        if (!_isConfigured.value) return
+        val repo = serversRepository ?: return
         viewModelScope.launch {
             try {
                 _isRefreshing.value = true
-                if (_servers.value.isEmpty()) {
+                if (_uiState.value !is UiState.Success) {
                     _uiState.value = UiState.Loading
                 }
-                val serversList = serversRepository.getServers()
-                _servers.value = serversList
-                _hubOverview.value = serversList.toHubOverview(currentSettings.serverUrl.trimEnd('/'))
+                val serversList = repo.getServers()
+                _hubOverview.value =
+                    serversList.toHubOverview(currentSettings.serverUrl.trimEnd('/'))
                 _uiState.value = UiState.Success(serversList)
             } catch (e: Exception) {
-                if (_servers.value.isEmpty()) {
+                if (_uiState.value !is UiState.Success) {
                     _uiState.value = UiState.Error(e.message ?: "Неизвестная ошибка")
                 }
             } finally {
                 _isRefreshing.value = false
             }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        serversRepository?.close()
     }
 }

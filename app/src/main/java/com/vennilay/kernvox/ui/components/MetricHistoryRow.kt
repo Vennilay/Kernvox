@@ -22,14 +22,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vennilay.kernvox.R
-import com.vennilay.kernvox.data.network.dto.MetricEntryDto
+import com.vennilay.kernvox.data.model.MetricEntry
 import com.vennilay.kernvox.ui.theme.Spacing
 import com.vennilay.kernvox.ui.utils.formatTimestamp
 import com.vennilay.kernvox.ui.utils.metricColor
 
 @Composable
 fun MetricHistoryRow(
-    entry: MetricEntryDto,
+    entry: MetricEntry,
     modifier: Modifier = Modifier,
 ) {
     Card(

@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -27,8 +26,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.PrimaryScrollableTabRow
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -48,9 +47,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.vennilay.kernvox.R
+import com.vennilay.kernvox.data.model.MetricEntry
+import com.vennilay.kernvox.data.model.Process
 import com.vennilay.kernvox.data.model.Server
-import com.vennilay.kernvox.data.network.dto.MetricEntryDto
-import com.vennilay.kernvox.data.network.dto.ProcessInfoDto
 import com.vennilay.kernvox.ui.components.EmptyState
 import com.vennilay.kernvox.ui.components.ErrorContent
 import com.vennilay.kernvox.ui.components.IconCircle
@@ -174,6 +173,7 @@ fun ServerDetailScreen(
                                         processesState = processesState,
                                         onRetry = { viewModel.refresh() },
                                     )
+
                                     2 -> HistoryTab(
                                         historyState = historyState,
                                         onRetry = { viewModel.refresh() },
@@ -310,7 +310,7 @@ private fun OverviewTab(server: Server) {
 
 @Composable
 private fun ProcessesTab(
-    processesState: UiState<List<ProcessInfoDto>>,
+    processesState: UiState<List<Process>>,
     onRetry: () -> Unit,
 ) {
     AnimatedContent(
@@ -360,7 +360,7 @@ private fun ProcessesTab(
 
 @Composable
 private fun HistoryTab(
-    historyState: UiState<List<MetricEntryDto>>,
+    historyState: UiState<List<MetricEntry>>,
     onRetry: () -> Unit,
 ) {
     AnimatedContent(
