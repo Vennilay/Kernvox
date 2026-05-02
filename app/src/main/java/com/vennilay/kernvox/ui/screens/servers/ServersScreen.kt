@@ -124,7 +124,7 @@ fun ServersScreen(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(horizontal = Spacing.md),
-                            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
                             contentPadding = PaddingValues(vertical = Spacing.sm),
                         ) {
                             item(contentType = "nodes_header") {
@@ -179,7 +179,7 @@ private fun ServersTopAppBar(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(40.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.primaryContainer),
                         contentAlignment = Alignment.Center,
@@ -187,7 +187,7 @@ private fun ServersTopAppBar(
                         Icon(
                             painter = painterResource(R.drawable.ic_server_placeholder),
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(22.dp),
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         )
                     }
@@ -236,9 +236,9 @@ private fun HubSubtitle(hubOverview: HubOverview) {
         }
     }
     Text(
-        modifier = Modifier.padding(start = 32.dp + Spacing.sm),
+        modifier = Modifier.padding(start = 40.dp + Spacing.sm),
         text = text,
-        style = MaterialTheme.typography.labelSmall,
+        style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
@@ -250,7 +250,8 @@ private fun SectionHeader(label: String) {
             .fillMaxWidth()
             .padding(top = Spacing.sm, bottom = Spacing.xs),
         text = label,
-        style = MaterialTheme.typography.labelSmall,
+        style = MaterialTheme.typography.labelMedium,
+        fontWeight = FontWeight.Medium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
