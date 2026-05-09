@@ -20,6 +20,8 @@ object HttpClientFactory {
         apiKey: String = "",
     ): HttpClient {
         return HttpClient(OkHttp) {
+            expectSuccess = true
+
             install(HttpTimeout) {
                 connectTimeoutMillis = 15_000
                 requestTimeoutMillis = 30_000

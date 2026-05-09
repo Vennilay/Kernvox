@@ -15,6 +15,7 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 data class AppSettings(
     val serverUrl: String = "",
     val apiKey: String = "",
+    val actionKey: String = "",
     val hasSeenWelcome: Boolean = false,
 )
 
@@ -26,14 +27,16 @@ class AppSettingsRepository(context: Context) {
         AppSettings(
             serverUrl = prefs[KEY_SERVER_URL] ?: "",
             apiKey = prefs[KEY_API_KEY] ?: "",
+            actionKey = prefs[KEY_ACTION_KEY] ?: "",
             hasSeenWelcome = prefs[KEY_HAS_SEEN_WELCOME] ?: false,
         )
     }
 
-    suspend fun saveSettings(serverUrl: String, apiKey: String) {
+    suspend fun saveSettings(serverUrl: String, apiKey: String, actionKey: String) {
         dataStore.edit { prefs ->
             prefs[KEY_SERVER_URL] = serverUrl
             prefs[KEY_API_KEY] = apiKey
+            prefs[KEY_ACTION_KEY] = actionKey
         }
     }
 
@@ -46,6 +49,7 @@ class AppSettingsRepository(context: Context) {
     companion object {
         private val KEY_SERVER_URL = stringPreferencesKey("server_url")
         private val KEY_API_KEY = stringPreferencesKey("api_key")
+        private val KEY_ACTION_KEY = stringPreferencesKey("action_key")
         private val KEY_HAS_SEEN_WELCOME = booleanPreferencesKey("has_seen_welcome")
     }
 }

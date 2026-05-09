@@ -22,22 +22,30 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -54,6 +62,7 @@ import com.vennilay.kernvox.ui.components.EmptyState
 import com.vennilay.kernvox.ui.components.ErrorContent
 import com.vennilay.kernvox.ui.components.IconCircle
 import com.vennilay.kernvox.ui.components.InfoTile
+import com.vennilay.kernvox.ui.components.KernvoxButton
 import com.vennilay.kernvox.ui.components.LoadingContent
 import com.vennilay.kernvox.ui.components.MetricHistoryRow
 import com.vennilay.kernvox.ui.components.ProcessItem
@@ -86,18 +95,30 @@ fun ServerDetailScreen(
     val processesState by viewModel.processesState.collectAsState()
     val historyState by viewModel.historyState.collectAsState()
     val totalProcesses by viewModel.totalProcesses.collectAsState()
+    val isRebooting by viewModel.isRebooting.collectAsState()
 
     BackHandler(onBack = onNavigateBack)
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val pagerState = rememberPagerState(pageCount = { 3 })
     val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    var showRebootConfirmation by remember { mutableStateOf(false) }
+
+    LaunchedEffect(viewModel) {
+        viewModel.messages.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     Scaffold(
         modifier = modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         contentWindowInsets = WindowInsets.safeDrawing,
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
         topBar = {
             ServerDetailTopAppBar(
                 serverName = when (val s = uiState) {
@@ -168,7 +189,11 @@ fun ServerDetailScreen(
                                 userScrollEnabled = true,
                             ) { page ->
                                 when (page) {
-                                    0 -> OverviewTab(server = state.data)
+                                    0 -> OverviewTab(
+                                        server = state.data,
+                                        isRebooting = isRebooting,
+                                        onRebootClick = { showRebootConfirmation = true },
+                                    )
                                     1 -> ProcessesTab(
                                         processesState = processesState,
                                         onRetry = { viewModel.refresh() },
@@ -186,10 +211,49 @@ fun ServerDetailScreen(
             }
         }
     }
+
+    if (showRebootConfirmation) {
+        AlertDialog(
+            onDismissRequest = {
+                if (!isRebooting) {
+                    showRebootConfirmation = false
+                }
+            },
+            title = {
+                Text(text = stringResource(R.string.server_detail_reboot_confirm_title))
+            },
+            text = {
+                Text(text = stringResource(R.string.server_detail_reboot_confirm_message))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showRebootConfirmation = false
+                        viewModel.rebootServer()
+                    },
+                    enabled = !isRebooting,
+                ) {
+                    Text(text = stringResource(R.string.server_detail_reboot_confirm_button))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showRebootConfirmation = false },
+                    enabled = !isRebooting,
+                ) {
+                    Text(text = stringResource(R.string.server_detail_reboot_cancel_button))
+                }
+            },
+        )
+    }
 }
 
 @Composable
-private fun OverviewTab(server: Server) {
+private fun OverviewTab(
+    server: Server,
+    isRebooting: Boolean,
+    onRebootClick: () -> Unit,
+) {
     val ramUnit = stringResource(R.string.server_detail_ram_unit)
     val daysUnit = stringResource(R.string.time_days)
     val hoursUnit = stringResource(R.string.time_hours)
@@ -207,6 +271,22 @@ private fun OverviewTab(server: Server) {
     ) {
         Spacer(modifier = Modifier.height(Spacing.md))
         ServerHeader(server = server)
+        Spacer(modifier = Modifier.height(Spacing.lg))
+
+        KernvoxButton(
+            onClick = onRebootClick,
+            enabled = !isRebooting,
+        ) {
+            Text(
+                text = stringResource(
+                    if (isRebooting) {
+                        R.string.server_detail_reboot_in_progress
+                    } else {
+                        R.string.server_detail_reboot_button
+                    }
+                )
+            )
+        }
         Spacer(modifier = Modifier.height(Spacing.lg))
 
         InfoTile(

@@ -7,6 +7,9 @@ import com.vennilay.kernvox.data.storage.AppSettings
 object RepositoryFactory {
     fun create(settings: AppSettings): ApiServersRepository {
         val client = HttpClientFactory.create(settings.serverUrl.trimEnd('/'), settings.apiKey)
-        return ApiServersRepository(KernvoxApiService(client), client)
+        return ApiServersRepository(
+            apiService = KernvoxApiService(client, settings.actionKey),
+            httpClient = client,
+        )
     }
 }

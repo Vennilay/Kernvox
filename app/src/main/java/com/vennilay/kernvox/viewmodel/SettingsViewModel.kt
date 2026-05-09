@@ -33,12 +33,18 @@ class SettingsViewModel(
         }
     }
 
-    fun saveSettings(serverUrl: String, apiKey: String) {
+    fun saveSettings(serverUrl: String, apiKey: String, actionKey: String) {
         viewModelScope.launch {
             try {
                 _settingsState.value = UiState.Loading
-                settingsRepository.saveSettings(serverUrl, apiKey)
-                _settingsState.value = UiState.Success(AppSettings(serverUrl, apiKey))
+                settingsRepository.saveSettings(serverUrl, apiKey, actionKey)
+                _settingsState.value = UiState.Success(
+                    AppSettings(
+                        serverUrl = serverUrl,
+                        apiKey = apiKey,
+                        actionKey = actionKey,
+                    )
+                )
             } catch (e: Exception) {
                 _settingsState.value = UiState.Error(e.message ?: "Не удалось сохранить")
             }

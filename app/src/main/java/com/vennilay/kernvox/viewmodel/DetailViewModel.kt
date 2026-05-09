@@ -13,8 +13,11 @@ import com.vennilay.kernvox.ui.state.UiState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -38,6 +41,12 @@ class DetailViewModel(
 
     private val _totalProcesses = MutableStateFlow(0)
     val totalProcesses: StateFlow<Int> = _totalProcesses.asStateFlow()
+
+    private val _isRebooting = MutableStateFlow(false)
+    val isRebooting: StateFlow<Boolean> = _isRebooting.asStateFlow()
+
+    private val _messages = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val messages: SharedFlow<String> = _messages.asSharedFlow()
 
     private var pollingJob: Job? = null
     private var repository: ApiServersRepository? = null
@@ -107,6 +116,32 @@ class DetailViewModel(
                 repository = RepositoryFactory.create(settings)
             }
             loadDetails(showLoading = _uiState.value !is UiState.Success)
+        }
+    }
+
+    fun rebootServer() {
+        viewModelScope.launch {
+            val currentRepository = repository ?: run {
+                _messages.emit("Настройки подключения не загружены.")
+                return@launch
+            }
+
+            if (_isRebooting.value) {
+                return@launch
+            }
+
+            try {
+                _isRebooting.value = true
+                val actionResult = currentRepository.rebootServer(serverId)
+                _messages.emit(
+                    actionResult.message
+                        ?: "Команда ${actionResult.action} принята сервером."
+                )
+            } catch (e: Exception) {
+                _messages.emit(e.message ?: "Не удалось отправить команду перезагрузки.")
+            } finally {
+                _isRebooting.value = false
+            }
         }
     }
 

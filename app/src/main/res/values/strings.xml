@@ -71,11 +71,14 @@
     <string name="settings_title">Настройки</string>
     <string name="settings_back_cd">Назад</string>
     <string name="settings_section_title">Подключение к KernvoxHub</string>
-    <string name="settings_description">Укажите URL вашего сервера KernvoxHub и API-ключ для подключения.</string>
+    <string name="settings_description">Укажите URL сервера, X-API-Key для чтения данных и при необходимости X-Action-Key для перезагрузки.</string>
     <string name="settings_server_url_label">URL сервера</string>
     <string name="settings_server_url_placeholder">https://kernvox.example.com</string>
     <string name="settings_api_key_label">API-ключ</string>
     <string name="settings_api_key_placeholder">Ваш X-API-Key</string>
+    <string name="settings_action_key_label">Action-key</string>
+    <string name="settings_action_key_placeholder">Ваш X-Action-Key</string>
+    <string name="settings_action_key_hint">Нужен только для защищённой перезагрузки сервера через KernvoxHub.</string>
     <string name="settings_save_button">Сохранить</string>
     <string name="settings_saved_message">Настройки сохранены</string>
 
@@ -88,6 +91,12 @@
     <string name="server_detail_cpu_cores">Ядра CPU</string>
     <string name="server_detail_network_rx">Получено (RX)</string>
     <string name="server_detail_network_tx">Отправлено (TX)</string>
+    <string name="server_detail_reboot_button">Перезагрузить сервер</string>
+    <string name="server_detail_reboot_in_progress">Отправка команды…</string>
+    <string name="server_detail_reboot_confirm_title">Подтвердите перезагрузку</string>
+    <string name="server_detail_reboot_confirm_message">KernvoxHub отправит на сервер команду reboot через SSH. Продолжить?</string>
+    <string name="server_detail_reboot_confirm_button">Перезагрузить</string>
+    <string name="server_detail_reboot_cancel_button">Отмена</string>
 
     <!-- Processes tab -->
     <string name="processes_empty_title">Нет данных о процессах</string>

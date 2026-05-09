@@ -62,15 +62,17 @@ fun SettingsScreen(
 
     var serverUrl by remember { mutableStateOf("") }
     var apiKey by remember { mutableStateOf("") }
+    var actionKey by remember { mutableStateOf("") }
     var urlError by remember { mutableStateOf(false) }
 
     val isSaving = settingsState is UiState.Loading
 
     LaunchedEffect(settingsState) {
-        if (settingsState is UiState.Success && serverUrl.isEmpty() && apiKey.isEmpty()) {
+        if (settingsState is UiState.Success && serverUrl.isEmpty() && apiKey.isEmpty() && actionKey.isEmpty()) {
             val settings = (settingsState as UiState.Success).data
             serverUrl = settings.serverUrl
             apiKey = settings.apiKey
+            actionKey = settings.actionKey
         }
     }
 
@@ -160,6 +162,27 @@ fun SettingsScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             )
 
+            Spacer(modifier = Modifier.height(Spacing.md))
+
+            OutlinedTextField(
+                value = actionKey,
+                onValueChange = { actionKey = it },
+                label = { Text(stringResource(R.string.settings_action_key_label)) },
+                placeholder = { Text(stringResource(R.string.settings_action_key_placeholder)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            )
+
+            Spacer(modifier = Modifier.height(Spacing.sm))
+
+            Text(
+                text = stringResource(R.string.settings_action_key_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
             Spacer(modifier = Modifier.height(Spacing.lg))
 
             AnimatedVisibility(visible = isSaving) {
@@ -176,7 +199,7 @@ fun SettingsScreen(
                         urlError = true
                     } else {
                         urlError = false
-                        viewModel.saveSettings(url, apiKey.trim())
+                        viewModel.saveSettings(url, apiKey.trim(), actionKey.trim())
                     }
                 },
                 enabled = !isSaving,
