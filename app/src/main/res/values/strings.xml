@@ -8,7 +8,7 @@
     <string name="home_description_line_2">Подключайтесь к серверам, отслеживайте их статус и получайте актуальную статистику в реальном времени.</string>
     <string name="home_features_title">Возможности:</string>
     <string name="home_feature_monitoring">Мониторинг статуса серверов</string>
-    <string name="home_feature_uptime">Отслеживание аптайма</string>
+    <string name="home_feature_uptime">Отслеживание времени работы</string>
     <string name="home_feature_quickview">Быстрый обзор инфраструктуры</string>
     <string name="home_open_app_button">Перейти к серверам</string>
     <string name="app_loading">Загрузка приложения</string>
@@ -16,16 +16,18 @@
     <!-- Servers Screen -->
     <string name="servers_title">Серверы</string>
     <string name="servers_hub_title">KernvoxHub</string>
-    <string name="servers_nodes_subtitle">Найдено нод: %1$d</string>
+    <string name="servers_nodes_subtitle">Найдено серверов: %1$d</string>
+    <string name="servers_hub_online_summary"> / %1$d в сети</string>
+    <string name="servers_hub_sync_time"> · синхронизация %1$s</string>
     <string name="servers_empty_title">Список серверов пуст</string>
-    <string name="servers_empty_subtitle">Добавьте первую ноду для начала мониторинга</string>
-    <string name="servers_no_results_subtitle">Ноды не найдены. Добавьте серверы через KernvoxHub.</string>
+    <string name="servers_empty_subtitle">Добавьте первый сервер для начала мониторинга</string>
+    <string name="servers_no_results_subtitle">Серверы не найдены. Добавьте их через KernvoxHub.</string>
     <string name="servers_status_label">Статус</string>
-    <string name="servers_status_online">Онлайн</string>
-    <string name="servers_status_offline">Оффлайн</string>
+    <string name="servers_status_online">В сети</string>
+    <string name="servers_status_offline">Не в сети</string>
     <string name="servers_add_button">Добавить сервер</string>
     <string name="servers_add_soon_snackbar">Добавление сервера — скоро</string>
-    <string name="servers_uptime_label">Аптайм</string>
+    <string name="servers_uptime_label">Время работы</string>
     <string name="servers_last_checked_label">Проверен</string>
     <string name="servers_error_title">Не удалось загрузить серверы</string>
     <string name="servers_retry">Повторить</string>
@@ -36,7 +38,7 @@
     <string name="server_card_host_label">Хост</string>
     <string name="server_card_uptime_label">Время работы</string>
     <string name="server_card_last_check_label">Последняя проверка</string>
-    <string name="server_card_uptime_label_short">Аптайм</string>
+    <string name="server_card_uptime_label_short">Время работы</string>
     <string name="server_card_last_check_label_short">Проверен</string>
     <string name="server_card_cpu_label">CPU</string>
     <string name="server_card_ram_label">RAM</string>
@@ -50,7 +52,7 @@
     <string name="server_detail_address">Адрес</string>
     <string name="server_detail_id">ID сервера</string>
     <string name="server_detail_status">Статус</string>
-    <string name="server_detail_uptime">Аптайм</string>
+    <string name="server_detail_uptime">Время работы</string>
     <string name="server_detail_last_checked">Последняя проверка</string>
     <string name="server_detail_loading_error">Не удалось загрузить данные</string>
     <string name="server_detail_retry">Повторить</string>
@@ -66,13 +68,13 @@
     <string name="settings_title">Настройки</string>
     <string name="settings_back_cd">Назад</string>
     <string name="settings_section_title">Подключение к KernvoxHub</string>
-    <string name="settings_description">Укажите URL сервера, X-API-Key для чтения данных и при необходимости X-Action-Key для перезагрузки.</string>
-    <string name="settings_server_url_label">URL сервера</string>
+    <string name="settings_description">Укажите адрес KernvoxHub, API-ключ для чтения данных и при необходимости ключ действия для перезагрузки.</string>
+    <string name="settings_server_url_label">Адрес сервера</string>
     <string name="settings_server_url_placeholder">https://kernvox.example.com</string>
     <string name="settings_api_key_label">API-ключ</string>
-    <string name="settings_api_key_placeholder">Ваш X-API-Key</string>
-    <string name="settings_action_key_label">Action-key</string>
-    <string name="settings_action_key_placeholder">Ваш X-Action-Key</string>
+    <string name="settings_api_key_placeholder">Ключ для чтения данных</string>
+    <string name="settings_action_key_label">Ключ действия</string>
+    <string name="settings_action_key_placeholder">Ключ для подтверждения команд</string>
     <string name="settings_action_key_hint">Нужен только для защищённой перезагрузки сервера через KernvoxHub.</string>
     <string name="settings_save_button">Сохранить</string>
     <string name="settings_saved_message">Настройки сохранены</string>
@@ -80,6 +82,7 @@
     <!-- Server Detail — Tabs -->
     <string name="server_detail_tab_overview">Обзор</string>
     <string name="server_detail_tab_processes">Процессы</string>
+    <string name="server_detail_tab_processes_count">Процессы (%1$d)</string>
     <string name="server_detail_tab_history">История</string>
 
     <!-- Server Detail — new InfoTiles -->
@@ -89,7 +92,7 @@
     <string name="server_detail_reboot_button">Перезагрузить сервер</string>
     <string name="server_detail_reboot_in_progress">Отправка команды…</string>
     <string name="server_detail_reboot_confirm_title">Подтвердите перезагрузку</string>
-    <string name="server_detail_reboot_confirm_message">KernvoxHub отправит на сервер команду reboot через SSH. Продолжить?</string>
+    <string name="server_detail_reboot_confirm_message">KernvoxHub отправит на сервер команду перезагрузки через SSH. Продолжить?</string>
     <string name="server_detail_reboot_confirm_button">Перезагрузить</string>
     <string name="server_detail_reboot_cancel_button">Отмена</string>
 
@@ -97,7 +100,7 @@
     <string name="processes_empty_title">Нет данных о процессах</string>
     <string name="processes_empty_subtitle">Информация о процессах недоступна</string>
     <string name="processes_offline_title">Сервер недоступен</string>
-    <string name="processes_offline_subtitle">Процессы нельзя загрузить, пока сервер offline. Запустите сервер и обновите данные.</string>
+    <string name="processes_offline_subtitle">Процессы нельзя загрузить, пока сервер недоступен. Запустите сервер и обновите данные.</string>
     <string name="process_cpu_label">CPU</string>
     <string name="process_ram_label">RAM</string>
     <string name="process_pid_label">PID %1$d</string>
@@ -134,11 +137,25 @@
     <string name="settings_password_lock_title">Вход по паролю</string>
     <string name="settings_password_lock_subtitle">Запрашивать код при запуске приложения</string>
     <string name="settings_biometric_title">Вход по отпечатку</string>
-    <string name="settings_biometric_subtitle">Разблокировка через биометрию с паролем как запасным вариантом</string>
-    <string name="settings_biometric_unavailable">Биометрия недоступна на этом устройстве</string>
+    <string name="settings_biometric_subtitle">Разблокировка отпечатком, пароль останется запасным способом</string>
+    <string name="settings_biometric_unavailable">Вход по отпечатку недоступен на этом устройстве</string>
     <string name="settings_biometric_requires_password">Сначала включите вход по паролю</string>
-    <string name="settings_reset_welcome_title">Показать welcome снова</string>
-    <string name="settings_reset_welcome_subtitle">Сбросить экран первого запуска</string>
+    <string name="settings_biometric_prompt_title">Подтвердите отпечаток</string>
+    <string name="settings_biometric_prompt_subtitle">Подтвердите отпечаток, чтобы включить вход по отпечатку</string>
+    <string name="settings_biometric_prompt_negative">Отмена</string>
+    <string name="settings_biometric_enabled">Вход по отпечатку включён</string>
+    <string name="settings_biometric_disabled">Вход по отпечатку отключён</string>
+    <string name="settings_biometric_not_enabled">Вход по отпечатку не включён</string>
+    <string name="settings_auto_lock_title">Автоблокировка</string>
+    <string name="settings_auto_lock_subtitle">Когда снова запрашивать пароль после возврата в приложение</string>
+    <string name="settings_auto_lock_immediate_title">Сразу</string>
+    <string name="settings_auto_lock_immediate_subtitle">Блокировать при каждом возврате из свернутого приложения</string>
+    <string name="settings_auto_lock_5_minutes_title">Через 5 минут</string>
+    <string name="settings_auto_lock_5_minutes_subtitle">Безопасный вариант по умолчанию</string>
+    <string name="settings_auto_lock_10_minutes_title">Через 10 минут</string>
+    <string name="settings_auto_lock_10_minutes_subtitle">Подходит для коротких переключений между приложениями</string>
+    <string name="settings_auto_lock_30_minutes_title">Через 30 минут</string>
+    <string name="settings_auto_lock_30_minutes_subtitle">Реже запрашивать пароль на доверенном устройстве</string>
     <string name="settings_app_version">Версия %1$s</string>
     <string name="settings_password_dialog_title">Задайте пароль</string>
     <string name="settings_password_confirm_title">Подтвердите пароль</string>
@@ -153,11 +170,10 @@
     <string name="settings_password_wrong">Неверный пароль</string>
     <string name="settings_password_enabled">Вход по паролю включён</string>
     <string name="settings_password_disabled">Вход по паролю отключён</string>
-    <string name="settings_welcome_reset_done">Welcome будет показан при следующем запуске</string>
 
     <!-- App lock -->
-    <string name="lock_title">Вход в Kernvox</string>
-    <string name="lock_subtitle">Введите пароль приложения</string>
+    <string name="lock_title">Приложение заблокировано</string>
+    <string name="lock_subtitle">Введите пароль, чтобы разблокировать приложение</string>
     <string name="lock_password_label">Пароль</string>
     <string name="lock_unlock_button">Войти</string>
     <string name="lock_biometric_button">Войти по отпечатку</string>
@@ -167,12 +183,12 @@
     <string name="lock_biometric_subtitle">Подтвердите вход отпечатком</string>
     <string name="lock_biometric_negative">Ввести пароль</string>
     <string name="lock_biometric_failed">Не удалось подтвердить отпечаток</string>
-    <string name="lock_biometric_cancelled">Биометрическая проверка отменена</string>
+    <string name="lock_biometric_cancelled">Проверка отпечатка отменена</string>
 
     <!-- User-facing errors -->
     <string name="error_request_failed">Не удалось выполнить запрос. Проверьте подключение и повторите.</string>
     <string name="error_invalid_api_key">Неверный API-ключ. Проверьте настройки подключения.</string>
-    <string name="error_action_key_required">Для перезагрузки нужен X-Action-Key. Укажите его в настройках.</string>
+    <string name="error_action_key_required">Для перезагрузки нужен ключ действия. Укажите его в настройках.</string>
     <string name="error_forbidden">Недостаточно прав для выполнения действия.</string>
     <string name="error_server_not_found">Сервер не найден.</string>
     <string name="error_too_many_requests">Слишком много запросов. Повторите позже.</string>

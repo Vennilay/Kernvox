@@ -158,9 +158,10 @@ fun ServerDetailScreen(
                         Column(modifier = Modifier.fillMaxSize()) {
                             val tabTitles = listOf(
                                 stringResource(R.string.server_detail_tab_overview),
-                                buildString {
-                                    append(stringResource(R.string.server_detail_tab_processes))
-                                    if (totalProcesses > 0) append(" ($totalProcesses)")
+                                if (totalProcesses > 0) {
+                                    stringResource(R.string.server_detail_tab_processes_count, totalProcesses)
+                                } else {
+                                    stringResource(R.string.server_detail_tab_processes)
                                 },
                                 stringResource(R.string.server_detail_tab_history),
                             )
@@ -263,6 +264,7 @@ private fun OverviewTab(
     val mbUnit = stringResource(R.string.network_bytes_mb)
     val gbUnit = stringResource(R.string.network_bytes_gb)
     val bytesUnit = stringResource(R.string.network_bytes_b)
+    val noData = stringResource(R.string.server_card_no_data)
 
     Column(
         modifier = Modifier
@@ -350,13 +352,13 @@ private fun OverviewTab(
         if (server.networkRxBytes != null || server.networkTxBytes != null) {
             InfoTile(
                 label = stringResource(R.string.server_detail_network_rx),
-                value = formatBytes(server.networkRxBytes, kbUnit, mbUnit, gbUnit, bytesUnit),
+                value = formatBytes(server.networkRxBytes, kbUnit, mbUnit, gbUnit, bytesUnit, noData),
                 icon = R.drawable.ic_monitoring,
             )
             Spacer(modifier = Modifier.height(Spacing.sm))
             InfoTile(
                 label = stringResource(R.string.server_detail_network_tx),
-                value = formatBytes(server.networkTxBytes, kbUnit, mbUnit, gbUnit, bytesUnit),
+                value = formatBytes(server.networkTxBytes, kbUnit, mbUnit, gbUnit, bytesUnit, noData),
                 icon = R.drawable.ic_monitoring,
             )
             Spacer(modifier = Modifier.height(Spacing.sm))

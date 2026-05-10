@@ -19,6 +19,9 @@ object BiometricAuth {
 
     fun showPrompt(
         activity: FragmentActivity,
+        titleRes: Int = R.string.lock_biometric_title,
+        subtitleRes: Int = R.string.lock_biometric_subtitle,
+        negativeButtonRes: Int = R.string.lock_biometric_negative,
         onSuccess: () -> Unit,
         onError: (cancelled: Boolean) -> Unit,
     ) {
@@ -42,9 +45,9 @@ object BiometricAuth {
 
         prompt.authenticate(
             BiometricPrompt.PromptInfo.Builder()
-                .setTitle(activity.getString(R.string.lock_biometric_title))
-                .setSubtitle(activity.getString(R.string.lock_biometric_subtitle))
-                .setNegativeButtonText(activity.getString(R.string.lock_biometric_negative))
+                .setTitle(activity.getString(titleRes))
+                .setSubtitle(activity.getString(subtitleRes))
+                .setNegativeButtonText(activity.getString(negativeButtonRes))
                 .setAllowedAuthenticators(AUTHENTICATORS)
                 .build(),
         )

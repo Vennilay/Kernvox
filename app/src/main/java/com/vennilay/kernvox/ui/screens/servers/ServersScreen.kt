@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -57,7 +58,6 @@ import com.vennilay.kernvox.ui.components.ErrorContent
 import com.vennilay.kernvox.ui.components.LoadingContent
 import com.vennilay.kernvox.ui.components.ServerCard
 import com.vennilay.kernvox.ui.state.UiState
-import com.vennilay.kernvox.ui.theme.GreenSuccess
 import com.vennilay.kernvox.ui.theme.Spacing
 import com.vennilay.kernvox.ui.utils.formatTimestamp
 import com.vennilay.kernvox.viewmodel.ServersViewModel
@@ -112,6 +112,7 @@ fun ServersScreen(
 
                 is UiState.Success -> {
                     val servers = state.data
+                    val locale = LocalLocale.current.platformLocale
                     PullToRefreshBox(
                         isRefreshing = isRefreshing,
                         onRefresh = { viewModel.loadServers() },
@@ -130,7 +131,7 @@ fun ServersScreen(
                             item(contentType = "nodes_header") {
                                 SectionHeader(
                                     label = stringResource(R.string.servers_nodes_subtitle, servers.size)
-                                        .uppercase(java.util.Locale.getDefault()),
+                                        .uppercase(locale),
                                 )
                             }
 
@@ -224,14 +225,17 @@ private fun HubSubtitle(hubOverview: HubOverview) {
     val lastSync = remember(hubOverview.lastUpdate) {
         hubOverview.lastUpdate?.let { formatTimestamp(it) }
     }
-    val text = remember(hubOverview.availableNodes, hubOverview.totalNodes, lastSync) {
+    val onlineSummary = stringResource(R.string.servers_hub_online_summary, hubOverview.totalNodes)
+    val syncSummary = lastSync?.let { stringResource(R.string.servers_hub_sync_time, it) }
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val text = remember(hubOverview.availableNodes, onlineSummary, syncSummary, primaryColor) {
         buildAnnotatedString {
-            withStyle(SpanStyle(color = GreenSuccess, fontWeight = FontWeight.SemiBold)) {
+            withStyle(SpanStyle(color = primaryColor, fontWeight = FontWeight.SemiBold)) {
                 append(hubOverview.availableNodes.toString())
             }
-            append(" / ${hubOverview.totalNodes} online")
-            if (lastSync != null) {
-                append(" · синк $lastSync")
+            append(onlineSummary)
+            if (syncSummary != null) {
+                append(syncSummary)
             }
         }
     }
