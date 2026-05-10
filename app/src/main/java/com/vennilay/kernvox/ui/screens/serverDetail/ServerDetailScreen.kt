@@ -55,8 +55,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.vennilay.kernvox.R
-import com.vennilay.kernvox.data.model.MetricEntry
-import com.vennilay.kernvox.data.model.Process
 import com.vennilay.kernvox.data.model.Server
 import com.vennilay.kernvox.ui.components.EmptyState
 import com.vennilay.kernvox.ui.components.ErrorContent
@@ -92,8 +90,6 @@ fun ServerDetailScreen(
 
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
-    val processesState by viewModel.processesState.collectAsState()
-    val historyState by viewModel.historyState.collectAsState()
     val totalProcesses by viewModel.totalProcesses.collectAsState()
     val isRebooting by viewModel.isRebooting.collectAsState()
 
@@ -109,6 +105,9 @@ fun ServerDetailScreen(
         viewModel.messages.collect { message ->
             snackbarHostState.showSnackbar(message)
         }
+    }
+    LaunchedEffect(pagerState.currentPage) {
+        viewModel.onTabSelected(pagerState.currentPage)
     }
 
     Scaffold(
@@ -174,6 +173,7 @@ fun ServerDetailScreen(
                                     Tab(
                                         selected = pagerState.currentPage == index,
                                         onClick = {
+                                            viewModel.onTabSelected(index)
                                             coroutineScope.launch {
                                                 pagerState.animateScrollToPage(index)
                                             }
@@ -195,13 +195,11 @@ fun ServerDetailScreen(
                                         onRebootClick = { showRebootConfirmation = true },
                                     )
                                     1 -> ProcessesTab(
-                                        processesState = processesState,
-                                        onRetry = { viewModel.refresh() },
+                                        viewModel = viewModel,
                                     )
 
                                     2 -> HistoryTab(
-                                        historyState = historyState,
-                                        onRetry = { viewModel.refresh() },
+                                        viewModel = viewModel,
                                     )
                                 }
                             }
@@ -390,9 +388,10 @@ private fun OverviewTab(
 
 @Composable
 private fun ProcessesTab(
-    processesState: UiState<List<Process>>,
-    onRetry: () -> Unit,
+    viewModel: DetailViewModel,
 ) {
+    val processesState by viewModel.processesState.collectAsState()
+
     AnimatedContent(
         targetState = processesState,
         transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(200)) },
@@ -405,7 +404,7 @@ private fun ProcessesTab(
                 title = stringResource(R.string.processes_error_title),
                 message = state.message,
                 retryLabel = stringResource(R.string.processes_retry),
-                onRetry = onRetry,
+                onRetry = { viewModel.loadProcesses(force = true) },
                 paddingValues = PaddingValues(Spacing.md),
             )
 
@@ -440,9 +439,10 @@ private fun ProcessesTab(
 
 @Composable
 private fun HistoryTab(
-    historyState: UiState<List<MetricEntry>>,
-    onRetry: () -> Unit,
+    viewModel: DetailViewModel,
 ) {
+    val historyState by viewModel.historyState.collectAsState()
+
     AnimatedContent(
         targetState = historyState,
         transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(200)) },
@@ -455,7 +455,7 @@ private fun HistoryTab(
                 title = stringResource(R.string.history_error_title),
                 message = state.message,
                 retryLabel = stringResource(R.string.history_retry),
-                onRetry = onRetry,
+                onRetry = { viewModel.loadHistory(force = true) },
                 paddingValues = PaddingValues(Spacing.md),
             )
 
@@ -466,13 +466,14 @@ private fun HistoryTab(
                         subtitle = stringResource(R.string.history_empty_subtitle),
                     )
                 } else {
+                    val historyEntries = remember(state.data) { state.data.asReversed() }
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(Spacing.md),
                         verticalArrangement = Arrangement.spacedBy(Spacing.sm),
                     ) {
                         items(
-                            items = state.data.asReversed(),
+                            items = historyEntries,
                             key = { it.id },
                             contentType = { "history_row" },
                         ) { entry ->

@@ -73,7 +73,6 @@ fun ServersScreen(
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val servers by viewModel.servers.collectAsState()
     val hubOverview by viewModel.hubOverview.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
 
@@ -108,6 +107,7 @@ fun ServersScreen(
                 )
 
                 is UiState.Success -> {
+                    val servers = state.data
                     PullToRefreshBox(
                         isRefreshing = isRefreshing,
                         onRefresh = { viewModel.loadServers() },

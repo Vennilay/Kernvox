@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -22,6 +23,9 @@ fun ProcessItem(
     process: Process,
     modifier: Modifier = Modifier,
 ) {
+    val cpuFormatted = remember(process.cpuPercent) { "%.1f%%".format(process.cpuPercent) }
+    val memoryFormatted = remember(process.memoryPercent) { "%.1f%%".format(process.memoryPercent) }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -62,7 +66,7 @@ fun ProcessItem(
         // CPU chip
         MetricChip(
             label = "CPU",
-            value = "%.1f%%".format(process.cpuPercent),
+            value = cpuFormatted,
             rawValue = process.cpuPercent,
             modifier = Modifier.wrapContentWidth(),
         )
@@ -70,7 +74,7 @@ fun ProcessItem(
         // RAM chip
         MetricChip(
             label = "RAM",
-            value = "%.1f%%".format(process.memoryPercent),
+            value = memoryFormatted,
             rawValue = process.memoryPercent,
             modifier = Modifier.wrapContentWidth(),
         )

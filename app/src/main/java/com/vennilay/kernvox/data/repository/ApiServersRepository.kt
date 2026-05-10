@@ -1,5 +1,6 @@
 package com.vennilay.kernvox.data.repository
 
+import android.util.Log
 import com.vennilay.kernvox.data.model.MetricEntry
 import com.vennilay.kernvox.data.model.Process
 import com.vennilay.kernvox.data.model.Server
@@ -60,10 +61,13 @@ class ApiServersRepository(
         try {
             block()
         } catch (e: ClientRequestException) {
+            Log.w(TAG, "KernvoxHub client error: ${e.response.status}", e)
             throw mapClientException(e)
         } catch (e: ServerResponseException) {
+            Log.w(TAG, "KernvoxHub server error: ${e.response.status}", e)
             throw mapServerException(e)
         } catch (e: Exception) {
+            Log.w(TAG, "KernvoxHub request failed", e)
             throw mapException(e)
         }
 
@@ -71,18 +75,18 @@ class ApiServersRepository(
         return when (e) {
             is ConnectTimeoutException,
             is ConnectException,
-                -> ApiException("Таймаут подключения. Проверьте URL сервера.", 0)
+                -> ApiException("Не удалось подключиться к серверу.", 0)
 
             is SocketTimeoutException ->
-                ApiException("Превышено время ожидания ответа от сервера.", 0)
+                ApiException("Сервер не ответил вовремя.", 0)
 
             is UnknownHostException ->
-                ApiException("Не удалось найти сервер. Проверьте URL.", 0)
+                ApiException("Не удалось подключиться к серверу.", 0)
 
             is kotlinx.serialization.SerializationException ->
-                ApiException("Неожиданный формат ответа от сервера.", 0)
+                ApiException("Не удалось прочитать ответ сервера.", 0)
 
-            else -> ApiException(e.message ?: "Неизвестная ошибка", 0)
+            else -> ApiException(userFriendlyApiMessage(e.message), 0)
         }
     }
 
@@ -90,28 +94,23 @@ class ApiServersRepository(
         val detail = extractErrorDetail(e.response.bodyAsText())
         return when (e.response.status) {
             HttpStatusCode.Unauthorized ->
-                ApiException("Неверный API-ключ. Проверьте настройки.", 401)
+                ApiException(userFriendlyApiMessage("Invalid API key"), 401)
 
             HttpStatusCode.Forbidden ->
                 ApiException(
-                    when (detail) {
-                        "Server action key is required" ->
-                            "Для перезагрузки нужен X-Action-Key. Укажите его в настройках."
-
-                        else -> detail ?: "Доступ запрещён. Проверьте ключи доступа."
-                    },
+                    userFriendlyApiMessage(detail ?: "Forbidden"),
                     403,
                 )
 
             HttpStatusCode.NotFound ->
-                ApiException(detail ?: "Сервер не найден.", 404)
+                ApiException(userFriendlyApiMessage(detail ?: "Server not found"), 404)
 
             HttpStatusCode.TooManyRequests ->
-                ApiException(detail ?: "Слишком много запросов. Повторите позже.", 429)
+                ApiException(userFriendlyApiMessage(detail ?: "Too many requests"), 429)
 
             else ->
                 ApiException(
-                    detail ?: "Ошибка сервера: ${e.response.status.value} ${e.response.status.description}",
+                    userFriendlyApiMessage(detail ?: e.response.status.description),
                     e.response.status.value,
                 )
         }
@@ -124,19 +123,19 @@ class ApiServersRepository(
                 ApiException(
                     when (detail) {
                         "SERVER_ACTION_TOKEN is not configured" ->
-                            "На стороне KernvoxHub не настроен SERVER_ACTION_TOKEN."
+                            "Сервер временно недоступен для этой команды."
 
                         "Host key verification failed" ->
-                            "Проверка SSH host key не пройдена. Нужна проверка сервера в KernvoxHub."
+                            "Не удалось подтвердить сервер. Проверьте настройки KernvoxHub."
 
-                        else -> detail ?: "Сервис временно недоступен."
+                        else -> userFriendlyApiMessage(detail ?: "Service unavailable")
                     },
                     e.response.status.value,
                 )
 
             else ->
                 ApiException(
-                    detail ?: "Ошибка на стороне сервера KernvoxHub.",
+                    userFriendlyApiMessage(detail ?: "KernvoxHub server error"),
                     e.response.status.value,
                 )
         }
@@ -157,3 +156,5 @@ class ApiException(
     message: String,
     val code: Int,
 ) : Exception(message)
+
+private const val TAG = "ApiServersRepository"

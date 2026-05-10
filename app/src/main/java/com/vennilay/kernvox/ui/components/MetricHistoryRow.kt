@@ -15,6 +15,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +33,8 @@ fun MetricHistoryRow(
     entry: MetricEntry,
     modifier: Modifier = Modifier,
 ) {
+    val timestamp = remember(entry.timestamp) { formatTimestamp(entry.timestamp) }
+
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.small,
@@ -49,7 +52,7 @@ fun MetricHistoryRow(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = formatTimestamp(entry.timestamp),
+                    text = timestamp,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -85,6 +88,7 @@ fun MetricHistoryRow(
 private fun MetricBar(label: String, value: Float?) {
     if (value == null) return
     val color = metricColor(value)
+    val formattedValue = remember(value) { "%.0f%%".format(value) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -108,7 +112,7 @@ private fun MetricBar(label: String, value: Float?) {
         )
         Spacer(Modifier.width(Spacing.xs))
         Text(
-            text = "%.0f%%".format(value),
+            text = formattedValue,
             style = MaterialTheme.typography.labelSmall,
             color = color,
             modifier = Modifier.width(34.dp),

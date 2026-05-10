@@ -1,5 +1,8 @@
 package com.vennilay.kernvox.data.model
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class MetricEntry(
     val id: Int,
     val cpuPercent: Float?,
