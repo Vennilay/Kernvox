@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,6 +36,7 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,17 +44,20 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.vennilay.kernvox.R
 import com.vennilay.kernvox.data.model.HubOverview
 import com.vennilay.kernvox.data.model.Server
 import com.vennilay.kernvox.ui.components.EmptyState
 import com.vennilay.kernvox.ui.components.ErrorContent
-import com.vennilay.kernvox.ui.components.IconCircle
 import com.vennilay.kernvox.ui.components.LoadingContent
 import com.vennilay.kernvox.ui.components.ServerCard
 import com.vennilay.kernvox.ui.state.UiState
+import com.vennilay.kernvox.ui.theme.GreenSuccess
 import com.vennilay.kernvox.ui.theme.Spacing
 import com.vennilay.kernvox.ui.utils.formatTimestamp
 import com.vennilay.kernvox.viewmodel.ServersViewModel
@@ -87,6 +90,7 @@ fun ServersScreen(
             ServersTopAppBar(
                 scrollBehavior = scrollBehavior,
                 onNavigateToSettings = onNavigateToSettings,
+                hubOverview = hubOverview,
             )
         },
     ) { paddingValues ->
@@ -120,22 +124,13 @@ fun ServersScreen(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(horizontal = Spacing.md),
-                            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
                             contentPadding = PaddingValues(vertical = Spacing.sm),
                         ) {
-                            hubOverview?.let { overview ->
-                                item(contentType = "hub_card") {
-                                    HubOverviewCard(hubOverview = overview)
-                                }
-                            }
-
                             item(contentType = "nodes_header") {
                                 SectionHeader(
-                                    title = stringResource(R.string.servers_nodes_title),
-                                    subtitle = stringResource(
-                                        R.string.servers_nodes_subtitle,
-                                        servers.size
-                                    ),
+                                    label = stringResource(R.string.servers_nodes_subtitle, servers.size)
+                                        .uppercase(java.util.Locale.getDefault()),
                                 )
                             }
 
@@ -176,30 +171,36 @@ fun ServersScreen(
 private fun ServersTopAppBar(
     scrollBehavior: androidx.compose.material3.TopAppBarScrollBehavior,
     onNavigateToSettings: () -> Unit,
+    hubOverview: HubOverview?,
 ) {
     TopAppBar(
         title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_server_placeholder),
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_server_placeholder),
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(Spacing.sm))
+                    Text(
+                        text = stringResource(R.string.servers_hub_title),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
-                Spacer(modifier = Modifier.width(Spacing.sm))
-                Text(
-                    text = stringResource(R.string.servers_hub_title),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                )
+                if (hubOverview != null) {
+                    HubSubtitle(hubOverview = hubOverview)
+                }
             }
         },
         actions = {
@@ -219,148 +220,38 @@ private fun ServersTopAppBar(
 }
 
 @Composable
-private fun HubOverviewCard(
-    hubOverview: HubOverview,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(20.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(18.dp))
-                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f))
-                .padding(Spacing.md),
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-            ) {
-                IconCircle(
-                    icon = R.drawable.ic_server_placeholder,
-                    containerSize = 44,
-                    iconSize = 22,
-                    rounded = true,
-                )
-                Column {
-                    Text(
-                        text = hubOverview.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Text(
-                        text = stringResource(R.string.servers_hub_subtitle),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+private fun HubSubtitle(hubOverview: HubOverview) {
+    val lastSync = remember(hubOverview.lastUpdate) {
+        hubOverview.lastUpdate?.let { formatTimestamp(it) }
+    }
+    val text = remember(hubOverview.availableNodes, hubOverview.totalNodes, lastSync) {
+        buildAnnotatedString {
+            withStyle(SpanStyle(color = GreenSuccess, fontWeight = FontWeight.SemiBold)) {
+                append(hubOverview.availableNodes.toString())
+            }
+            append(" / ${hubOverview.totalNodes} online")
+            if (lastSync != null) {
+                append(" · синк $lastSync")
             }
         }
-
-        Spacer(modifier = Modifier.height(Spacing.md))
-
-        InfoRow(
-            label = stringResource(R.string.servers_hub_url_label),
-            value = hubOverview.baseUrl,
-        )
-        Spacer(modifier = Modifier.height(Spacing.sm))
-        InfoRow(
-            label = stringResource(R.string.servers_hub_host_label),
-            value = hubOverview.port?.let { "${hubOverview.host}:$it" } ?: hubOverview.host,
-        )
-        Spacer(modifier = Modifier.height(Spacing.md))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            HubMetric(
-                label = stringResource(R.string.servers_hub_total_nodes),
-                value = hubOverview.totalNodes.toString(),
-            )
-            HubMetric(
-                label = stringResource(R.string.servers_hub_available_nodes),
-                value = hubOverview.availableNodes.toString(),
-            )
-            HubMetric(
-                label = stringResource(R.string.servers_hub_last_sync),
-                value = hubOverview.lastUpdate?.let(::formatTimestamp)
-                    ?: stringResource(R.string.server_card_no_data),
-            )
-        }
     }
+    Text(
+        modifier = Modifier.padding(start = 40.dp + Spacing.sm),
+        text = text,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 @Composable
-private fun SectionHeader(
-    title: String,
-    subtitle: String,
-) {
-    Column(
+private fun SectionHeader(label: String) {
+    Text(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = Spacing.sm, bottom = Spacing.xs),
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-        Spacer(modifier = Modifier.height(Spacing.xs))
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-@Composable
-private fun InfoRow(
-    label: String,
-    value: String,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(modifier = Modifier.width(Spacing.sm))
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-    }
-}
-
-@Composable
-private fun HubMetric(
-    label: String,
-    value: String,
-) {
-    Column {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(modifier = Modifier.height(Spacing.xs))
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-    }
+        text = label,
+        style = MaterialTheme.typography.labelMedium,
+        fontWeight = FontWeight.Medium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }

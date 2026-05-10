@@ -16,13 +16,6 @@
     <!-- Servers Screen -->
     <string name="servers_title">Серверы</string>
     <string name="servers_hub_title">KernvoxHub</string>
-    <string name="servers_hub_subtitle">Главный сервер приложения</string>
-    <string name="servers_hub_url_label">URL</string>
-    <string name="servers_hub_host_label">Хост</string>
-    <string name="servers_hub_total_nodes">Нод</string>
-    <string name="servers_hub_available_nodes">Онлайн</string>
-    <string name="servers_hub_last_sync">Обновлён</string>
-    <string name="servers_nodes_title">Привязанные ноды</string>
     <string name="servers_nodes_subtitle">Найдено нод: %1$d</string>
     <string name="servers_empty_title">Список серверов пуст</string>
     <string name="servers_empty_subtitle">Добавьте первую ноду для начала мониторинга</string>
