@@ -1,7 +1,11 @@
 package com.vennilay.kernvox.ui.screens.settings
 
 import android.app.Application
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -10,8 +14,13 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
@@ -28,6 +37,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -39,12 +50,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -52,20 +68,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vennilay.kernvox.BuildConfig
 import com.vennilay.kernvox.R
 import com.vennilay.kernvox.auth.BiometricAuth
 import com.vennilay.kernvox.data.storage.AppSettings
+import com.vennilay.kernvox.data.storage.AutoLockTimeout
 import com.vennilay.kernvox.data.storage.ThemeMode
 import com.vennilay.kernvox.ui.components.KernvoxButton
 import com.vennilay.kernvox.ui.state.UiState
-import com.vennilay.kernvox.ui.theme.GreenSuccess
 import com.vennilay.kernvox.ui.theme.Spacing
 import com.vennilay.kernvox.viewmodel.SettingsViewModel
 import com.vennilay.kernvox.viewmodel.SettingsViewModelFactory
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
@@ -77,9 +95,11 @@ fun SettingsScreen(
     ),
 ) {
     val context = LocalContext.current
+    val activity = remember(context) { context.findFragmentActivity() }
     val settingsState by viewModel.settingsState.collectAsState()
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val biometricAvailable = remember(context) { BiometricAuth.isAvailable(context) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var serverUrl by rememberSaveable { mutableStateOf("") }
     var apiKey by rememberSaveable { mutableStateOf("") }
@@ -98,11 +118,22 @@ fun SettingsScreen(
         }
     }
 
+    LaunchedEffect(viewModel) {
+        viewModel.messages.collect { message ->
+            snackbarHostState.showSnackbar(message.resolve(context))
+        }
+    }
+
     Scaffold(
         modifier = modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
-        contentWindowInsets = WindowInsets.safeDrawing,
+        contentWindowInsets = WindowInsets.safeDrawing.only(
+            WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
+        ),
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
         topBar = {
             TopAppBar(
                 title = {
@@ -128,91 +159,120 @@ fun SettingsScreen(
             )
         },
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = Spacing.md)
-                .verticalScroll(rememberScrollState()),
+                .navigationBarsPadding()
+                .imePadding(),
         ) {
-            Spacer(modifier = Modifier.height(Spacing.md))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = Spacing.md)
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                Spacer(modifier = Modifier.height(Spacing.md))
 
-            AnimatedVisibility(visible = isSaving) {
-                Column {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                AnimatedVisibility(visible = isSaving) {
+                    Column {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        Spacer(modifier = Modifier.height(Spacing.md))
+                    }
+                }
+
+                settings?.let { currentSettings ->
+                    AppearanceSection(
+                        themeMode = currentSettings.themeMode,
+                        onThemeSelected = viewModel::saveThemeMode,
+                    )
+                    Spacer(modifier = Modifier.height(Spacing.md))
+                    SecuritySection(
+                        settings = currentSettings,
+                        biometricAvailable = biometricAvailable,
+                        biometricPromptAvailable = activity != null,
+                        onPasswordToggle = {
+                            passwordDialog = if (currentSettings.isPasswordLockEnabled) {
+                                PasswordDialogMode.Disable
+                            } else {
+                                PasswordDialogMode.Enable
+                            }
+                        },
+                        onBiometricToggle = { enabled ->
+                            if (!enabled) {
+                                viewModel.setBiometricUnlockEnabled(false)
+                                return@SecuritySection
+                            }
+
+                            val promptActivity = activity
+                            if (promptActivity == null) {
+                                viewModel.notifyBiometricEnableRejected()
+                                return@SecuritySection
+                            }
+
+                            BiometricAuth.showPrompt(
+                                activity = promptActivity,
+                                titleRes = R.string.settings_biometric_prompt_title,
+                                subtitleRes = R.string.settings_biometric_prompt_subtitle,
+                                negativeButtonRes = R.string.settings_biometric_prompt_negative,
+                                onSuccess = { viewModel.setBiometricUnlockEnabled(true) },
+                                onError = { viewModel.notifyBiometricEnableRejected() },
+                            )
+                        },
+                        onAutoLockSelected = viewModel::saveAutoLockTimeout,
+                    )
+                    Spacer(modifier = Modifier.height(Spacing.md))
+                    AppSection()
                     Spacer(modifier = Modifier.height(Spacing.md))
                 }
-            }
 
-            settings?.let { currentSettings ->
-                AppearanceSection(
-                    themeMode = currentSettings.themeMode,
-                    onThemeSelected = viewModel::saveThemeMode,
-                )
-                Spacer(modifier = Modifier.height(Spacing.md))
-                SecuritySection(
-                    settings = currentSettings,
-                    biometricAvailable = biometricAvailable,
-                    onPasswordToggle = {
-                        passwordDialog = if (currentSettings.isPasswordLockEnabled) {
-                            PasswordDialogMode.Disable
+                ApiSection(
+                    serverUrl = serverUrl,
+                    apiKey = apiKey,
+                    actionKey = actionKey,
+                    urlError = urlError,
+                    isSaving = isSaving,
+                    onServerUrlChange = {
+                        serverUrl = it
+                        urlError = false
+                    },
+                    onApiKeyChange = { apiKey = it },
+                    onActionKeyChange = { actionKey = it },
+                    onSave = {
+                        val url = serverUrl.trim()
+                        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                            urlError = true
                         } else {
-                            PasswordDialogMode.Enable
+                            urlError = false
+                            viewModel.saveSettings(url, apiKey.trim(), actionKey.trim())
                         }
                     },
-                    onBiometricToggle = viewModel::setBiometricUnlockEnabled,
                 )
-                Spacer(modifier = Modifier.height(Spacing.md))
-                AppSection(onResetWelcome = viewModel::resetWelcome)
-                Spacer(modifier = Modifier.height(Spacing.md))
-            }
 
-            ApiSection(
-                serverUrl = serverUrl,
-                apiKey = apiKey,
-                actionKey = actionKey,
-                urlError = urlError,
-                isSaving = isSaving,
-                onServerUrlChange = {
-                    serverUrl = it
-                    urlError = false
-                },
-                onApiKeyChange = { apiKey = it },
-                onActionKeyChange = { actionKey = it },
-                onSave = {
-                    val url = serverUrl.trim()
-                    if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                        urlError = true
-                    } else {
-                        urlError = false
-                        viewModel.saveSettings(url, apiKey.trim(), actionKey.trim())
+                when (settingsState) {
+                    is UiState.Success -> {
+                        Spacer(modifier = Modifier.height(Spacing.md))
+                        Text(
+                            text = stringResource(R.string.settings_saved_ok),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
                     }
-                },
-            )
 
-            when (settingsState) {
-                is UiState.Success -> {
-                    Spacer(modifier = Modifier.height(Spacing.md))
-                    Text(
-                        text = stringResource(R.string.settings_saved_ok),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = GreenSuccess,
-                    )
+                    is UiState.Error -> {
+                        Spacer(modifier = Modifier.height(Spacing.md))
+                        Text(
+                            text = (settingsState as UiState.Error).message.asString(),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+
+                    else -> Unit
                 }
 
-                is UiState.Error -> {
-                    Spacer(modifier = Modifier.height(Spacing.md))
-                    Text(
-                        text = (settingsState as UiState.Error).message.asString(),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-
-                else -> Unit
+                Spacer(modifier = Modifier.height(Spacing.xl))
             }
-
-            Spacer(modifier = Modifier.height(Spacing.xl))
         }
     }
 
@@ -265,8 +325,10 @@ private fun AppearanceSection(
 private fun SecuritySection(
     settings: AppSettings,
     biometricAvailable: Boolean,
+    biometricPromptAvailable: Boolean,
     onPasswordToggle: () -> Unit,
     onBiometricToggle: (Boolean) -> Unit,
+    onAutoLockSelected: (AutoLockTimeout) -> Unit,
 ) {
     SettingsSection(title = stringResource(R.string.settings_section_security)) {
         SettingsSwitchRow(
@@ -279,28 +341,42 @@ private fun SecuritySection(
         SettingsSwitchRow(
             title = stringResource(R.string.settings_biometric_title),
             subtitle = when {
-                !biometricAvailable -> stringResource(R.string.settings_biometric_unavailable)
+                !biometricAvailable || !biometricPromptAvailable -> stringResource(R.string.settings_biometric_unavailable)
                 !settings.isPasswordLockEnabled -> stringResource(R.string.settings_biometric_requires_password)
                 else -> stringResource(R.string.settings_biometric_subtitle)
             },
             checked = settings.isBiometricUnlockEnabled &&
                 biometricAvailable &&
+                biometricPromptAvailable &&
                 settings.isPasswordLockEnabled,
-            enabled = biometricAvailable && settings.isPasswordLockEnabled,
+            enabled = biometricAvailable && biometricPromptAvailable && settings.isPasswordLockEnabled,
             onCheckedChange = onBiometricToggle,
         )
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+        Text(
+            text = stringResource(R.string.settings_auto_lock_title),
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(top = Spacing.sm),
+        )
+        Text(
+            text = stringResource(R.string.settings_auto_lock_subtitle),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = Spacing.xs),
+        )
+        AutoLockTimeout.entries.forEach { timeout ->
+            AutoLockOption(
+                timeout = timeout,
+                selected = settings.autoLockTimeout == timeout,
+                onClick = { onAutoLockSelected(timeout) },
+            )
+        }
     }
 }
 
 @Composable
-private fun AppSection(onResetWelcome: () -> Unit) {
+private fun AppSection() {
     SettingsSection(title = stringResource(R.string.settings_section_app)) {
-        SettingsActionRow(
-            title = stringResource(R.string.settings_reset_welcome_title),
-            subtitle = stringResource(R.string.settings_reset_welcome_subtitle),
-            onClick = onResetWelcome,
-        )
-        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
         SettingsActionRow(
             title = stringResource(R.string.settings_app_version, BuildConfig.VERSION_NAME),
             subtitle = stringResource(R.string.app_name),
@@ -334,7 +410,9 @@ private fun ApiSection(
             onValueChange = onServerUrlChange,
             label = { Text(stringResource(R.string.settings_server_url_label)) },
             placeholder = { Text(stringResource(R.string.settings_server_url_placeholder)) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .bringIntoViewOnFocus(),
             singleLine = true,
             isError = urlError,
             supportingText = if (urlError) {
@@ -348,7 +426,9 @@ private fun ApiSection(
             onValueChange = onApiKeyChange,
             label = { Text(stringResource(R.string.settings_api_key_label)) },
             placeholder = { Text(stringResource(R.string.settings_api_key_placeholder)) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .bringIntoViewOnFocus(),
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -359,7 +439,9 @@ private fun ApiSection(
             onValueChange = onActionKeyChange,
             label = { Text(stringResource(R.string.settings_action_key_label)) },
             placeholder = { Text(stringResource(R.string.settings_action_key_placeholder)) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .bringIntoViewOnFocus(),
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -427,6 +509,38 @@ private fun ThemeOption(
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.padding(start = Spacing.sm),
         )
+    }
+}
+
+@Composable
+private fun AutoLockOption(
+    timeout: AutoLockTimeout,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .selectable(
+                selected = selected,
+                onClick = onClick,
+                role = Role.RadioButton,
+            )
+            .padding(vertical = Spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(selected = selected, onClick = onClick)
+        Column(modifier = Modifier.padding(start = Spacing.sm)) {
+            Text(
+                text = stringResource(timeout.titleRes),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Text(
+                text = stringResource(timeout.subtitleRes),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
@@ -499,6 +613,7 @@ private fun PasswordDialog(
     val isEnableMode = mode == PasswordDialogMode.Enable
 
     AlertDialog(
+        modifier = Modifier.imePadding(),
         onDismissRequest = onDismiss,
         title = {
             Text(
@@ -512,7 +627,7 @@ private fun PasswordDialog(
             )
         },
         text = {
-            Column {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 OutlinedTextField(
                     value = password,
                     onValueChange = {
@@ -534,6 +649,7 @@ private fun PasswordDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     singleLine = true,
                     isError = errorRes != null,
+                    modifier = Modifier.bringIntoViewOnFocus(),
                 )
                 if (isEnableMode) {
                     Spacer(modifier = Modifier.height(Spacing.sm))
@@ -548,6 +664,7 @@ private fun PasswordDialog(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         singleLine = true,
                         isError = errorRes != null,
+                        modifier = Modifier.bringIntoViewOnFocus(),
                     )
                 }
                 errorRes?.let {
@@ -592,6 +709,53 @@ private fun PasswordDialog(
             }
         },
     )
+}
+
+private val AutoLockTimeout.titleRes: Int
+    get() = when (this) {
+        AutoLockTimeout.IMMEDIATE -> R.string.settings_auto_lock_immediate_title
+        AutoLockTimeout.FIVE_MINUTES -> R.string.settings_auto_lock_5_minutes_title
+        AutoLockTimeout.TEN_MINUTES -> R.string.settings_auto_lock_10_minutes_title
+        AutoLockTimeout.THIRTY_MINUTES -> R.string.settings_auto_lock_30_minutes_title
+    }
+
+private val AutoLockTimeout.subtitleRes: Int
+    get() = when (this) {
+        AutoLockTimeout.IMMEDIATE -> R.string.settings_auto_lock_immediate_subtitle
+        AutoLockTimeout.FIVE_MINUTES -> R.string.settings_auto_lock_5_minutes_subtitle
+        AutoLockTimeout.TEN_MINUTES -> R.string.settings_auto_lock_10_minutes_subtitle
+        AutoLockTimeout.THIRTY_MINUTES -> R.string.settings_auto_lock_30_minutes_subtitle
+    }
+
+private tailrec fun Context.findFragmentActivity(): FragmentActivity? =
+    when (this) {
+        is FragmentActivity -> this
+        is ContextWrapper -> baseContext.findFragmentActivity()
+        else -> null
+    }
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun Modifier.bringIntoViewOnFocus(): Modifier {
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+    val coroutineScope = rememberCoroutineScope()
+    val density = LocalDensity.current
+    val imeBottom = WindowInsets.ime.getBottom(density)
+    var isFocused by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isFocused, imeBottom) {
+        if (isFocused) {
+            bringIntoViewRequester.bringIntoView()
+        }
+    }
+
+    return this.bringIntoViewRequester(bringIntoViewRequester)
+        .onFocusChanged { focusState ->
+            isFocused = focusState.isFocused
+            if (focusState.isFocused) {
+                coroutineScope.launch { bringIntoViewRequester.bringIntoView() }
+            }
+        }
 }
 
 private enum class PasswordDialogMode {

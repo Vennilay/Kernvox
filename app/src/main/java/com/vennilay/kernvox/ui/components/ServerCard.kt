@@ -42,14 +42,15 @@ fun ServerCard(
     onClick: ((Server) -> Unit)? = null,
 ) {
     val isOnline = server.isAvailable ?: false
-    val cpuFormatted = remember(server.cpuPercent) {
-        server.cpuPercent?.let { "%.1f%%".format(it) } ?: "—"
+    val noData = stringResource(R.string.server_card_no_data)
+    val cpuFormatted = remember(server.cpuPercent, noData) {
+        server.cpuPercent?.let { "%.1f%%".format(it) } ?: noData
     }
-    val ramFormatted = remember(server.ramPercent) {
-        server.ramPercent?.let { "%.1f%%".format(it) } ?: "—"
+    val ramFormatted = remember(server.ramPercent, noData) {
+        server.ramPercent?.let { "%.1f%%".format(it) } ?: noData
     }
-    val diskFormatted = remember(server.diskUsedPercent) {
-        server.diskUsedPercent?.let { "%.1f%%".format(it) } ?: "—"
+    val diskFormatted = remember(server.diskUsedPercent, noData) {
+        server.diskUsedPercent?.let { "%.1f%%".format(it) } ?: noData
     }
 
     Card(

@@ -6,11 +6,15 @@ import com.vennilay.kernvox.R
 import com.vennilay.kernvox.data.repository.toUserFriendlyMessageRes
 import com.vennilay.kernvox.data.storage.AppSettings
 import com.vennilay.kernvox.data.storage.AppSettingsRepository
+import com.vennilay.kernvox.data.storage.AutoLockTimeout
 import com.vennilay.kernvox.data.storage.ThemeMode
 import com.vennilay.kernvox.ui.state.UiState
 import com.vennilay.kernvox.ui.state.UiText
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -21,6 +25,9 @@ class SettingsViewModel(
 
     private val _settingsState = MutableStateFlow<UiState<AppSettings>>(UiState.Loading)
     val settingsState: StateFlow<UiState<AppSettings>> = _settingsState.asStateFlow()
+
+    private val _messages = MutableSharedFlow<UiText>(extraBufferCapacity = 1)
+    val messages: SharedFlow<UiText> = _messages.asSharedFlow()
 
     init {
         loadSettings()
@@ -50,6 +57,7 @@ class SettingsViewModel(
                         actionKey = actionKey,
                         hasSeenWelcome = previousSettings?.hasSeenWelcome ?: false,
                         themeMode = previousSettings?.themeMode ?: ThemeMode.SYSTEM,
+                        autoLockTimeout = previousSettings?.autoLockTimeout ?: AutoLockTimeout.FIVE_MINUTES,
                         isPasswordLockEnabled = previousSettings?.isPasswordLockEnabled ?: false,
                         isBiometricUnlockEnabled = previousSettings?.isBiometricUnlockEnabled ?: false,
                     )
@@ -64,6 +72,13 @@ class SettingsViewModel(
         updateSettings { settings ->
             settingsRepository.saveThemeMode(themeMode)
             settings.copy(themeMode = themeMode)
+        }
+    }
+
+    fun saveAutoLockTimeout(timeout: AutoLockTimeout) {
+        updateSettings { settings ->
+            settingsRepository.saveAutoLockTimeout(timeout)
+            settings.copy(autoLockTimeout = timeout)
         }
     }
 
@@ -99,9 +114,26 @@ class SettingsViewModel(
 
     fun setBiometricUnlockEnabled(enabled: Boolean) {
         updateSettings { settings ->
+            if (enabled && !settings.isPasswordLockEnabled) {
+                _messages.emit(UiText.resource(R.string.settings_biometric_requires_password))
+                return@updateSettings settings.copy(isBiometricUnlockEnabled = false)
+            }
             settingsRepository.setBiometricUnlockEnabled(enabled)
+            _messages.emit(
+                UiText.resource(
+                    if (enabled) {
+                        R.string.settings_biometric_enabled
+                    } else {
+                        R.string.settings_biometric_disabled
+                    },
+                ),
+            )
             settings.copy(isBiometricUnlockEnabled = enabled)
         }
+    }
+
+    fun notifyBiometricEnableRejected() {
+        _messages.tryEmit(UiText.resource(R.string.settings_biometric_not_enabled))
     }
 
     private fun updateSettings(block: suspend (AppSettings) -> AppSettings) {

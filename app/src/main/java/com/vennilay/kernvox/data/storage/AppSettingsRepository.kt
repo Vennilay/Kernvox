@@ -24,12 +24,30 @@ enum class ThemeMode {
     DARK,
 }
 
+enum class AutoLockTimeout(
+    val storageValue: String,
+    val timeoutMillis: Long,
+) {
+    IMMEDIATE("immediate", 0L),
+    FIVE_MINUTES("five_minutes", 5 * 60 * 1000L),
+    TEN_MINUTES("ten_minutes", 10 * 60 * 1000L),
+    THIRTY_MINUTES("thirty_minutes", 30 * 60 * 1000L);
+
+    fun shouldLockAfter(elapsedMillis: Long): Boolean = elapsedMillis >= timeoutMillis
+
+    companion object {
+        fun fromStorageValue(value: String?): AutoLockTimeout =
+            entries.firstOrNull { it.storageValue == value } ?: FIVE_MINUTES
+    }
+}
+
 data class AppSettings(
     val serverUrl: String = "",
     val apiKey: String = "",
     val actionKey: String = "",
     val hasSeenWelcome: Boolean = false,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val autoLockTimeout: AutoLockTimeout = AutoLockTimeout.FIVE_MINUTES,
     val isPasswordLockEnabled: Boolean = false,
     val isBiometricUnlockEnabled: Boolean = false,
 )
@@ -51,6 +69,7 @@ class AppSettingsRepository(context: Context) {
             actionKey = prefs[KEY_ACTION_KEY] ?: "",
             hasSeenWelcome = prefs[KEY_HAS_SEEN_WELCOME] ?: false,
             themeMode = prefs[KEY_THEME_MODE]?.toThemeMode() ?: ThemeMode.SYSTEM,
+            autoLockTimeout = AutoLockTimeout.fromStorageValue(prefs[KEY_AUTO_LOCK_TIMEOUT]),
             isPasswordLockEnabled = prefs[KEY_PASSWORD_HASH] != null,
             isBiometricUnlockEnabled = prefs[KEY_BIOMETRIC_UNLOCK_ENABLED] ?: false,
         )
@@ -79,6 +98,12 @@ class AppSettingsRepository(context: Context) {
     suspend fun saveThemeMode(themeMode: ThemeMode) {
         dataStore.edit { prefs ->
             prefs[KEY_THEME_MODE] = themeMode.name
+        }
+    }
+
+    suspend fun saveAutoLockTimeout(timeout: AutoLockTimeout) {
+        dataStore.edit { prefs ->
+            prefs[KEY_AUTO_LOCK_TIMEOUT] = timeout.storageValue
         }
     }
 
@@ -125,6 +150,7 @@ class AppSettingsRepository(context: Context) {
         private val KEY_ACTION_KEY = stringPreferencesKey("action_key")
         private val KEY_HAS_SEEN_WELCOME = booleanPreferencesKey("has_seen_welcome")
         private val KEY_THEME_MODE = stringPreferencesKey("theme_mode")
+        private val KEY_AUTO_LOCK_TIMEOUT = stringPreferencesKey("auto_lock_timeout")
         private val KEY_PASSWORD_SALT = stringPreferencesKey("password_salt")
         private val KEY_PASSWORD_HASH = stringPreferencesKey("password_hash")
         private val KEY_BIOMETRIC_UNLOCK_ENABLED = booleanPreferencesKey("biometric_unlock_enabled")

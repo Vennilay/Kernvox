@@ -37,8 +37,9 @@ fun formatBytes(
     mbUnit: String,
     gbUnit: String,
     bytesUnit: String,
+    noData: String,
 ): String {
-    if (bytes == null) return "—"
+    if (bytes == null) return noData
     return when {
         bytes >= 1_073_741_824f -> "${"%.1f".format(bytes / 1_073_741_824f)} $gbUnit"
         bytes >= 1_048_576f -> "${"%.1f".format(bytes / 1_048_576f)} $mbUnit"
