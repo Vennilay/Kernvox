@@ -1,39 +1,36 @@
 package com.vennilay.kernvox.data.repository
 
+import com.vennilay.kernvox.R
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Test
 
 class ApiErrorMapperTest {
 
     @Test
-    fun mapsKnownEnglishMessagesToRussian() {
+    fun mapsKnownEnglishMessagesToStringResources() {
         assertEquals(
-            "Неверный API-ключ. Проверьте настройки подключения.",
-            userFriendlyApiMessage("Invalid API key"),
+            R.string.error_invalid_api_key,
+            userFriendlyApiMessageRes("Invalid API key"),
         )
         assertEquals(
-            "Для перезагрузки нужен X-Action-Key. Укажите его в настройках.",
-            userFriendlyApiMessage("Server action key is required"),
+            R.string.error_action_key_required,
+            userFriendlyApiMessageRes("Server action key is required"),
         )
     }
 
     @Test
     fun hidesUnknownEnglishTechnicalMessages() {
-        val result = userFriendlyApiMessage("Internal Server Error: No running event loop")
-
         assertEquals(
-            "Не удалось выполнить запрос. Проверьте подключение и повторите.",
-            result,
+            R.string.error_request_failed,
+            userFriendlyApiMessageRes("Internal Server Error: No running event loop"),
         )
-        assertFalse(result.any { it in 'A'..'Z' || it in 'a'..'z' })
     }
 
     @Test
-    fun keepsRussianMessagesAsIs() {
+    fun mapsRussianServerMessagesToResources() {
         assertEquals(
-            "Настройки не указаны.",
-            userFriendlyApiMessage("Настройки не указаны."),
+            R.string.error_server_not_found,
+            userFriendlyApiMessageRes("Сервер не найден."),
         )
     }
 }

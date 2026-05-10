@@ -1,64 +1,70 @@
 package com.vennilay.kernvox.data.repository
 
+import androidx.annotation.StringRes
+import com.vennilay.kernvox.R
 import java.util.Locale
 
-private const val DEFAULT_REQUEST_ERROR =
-    "Не удалось выполнить запрос. Проверьте подключение и повторите."
-
-fun userFriendlyApiMessage(message: String?): String {
+/**
+ * Преобразует подробности ошибок сети, API и SSH в стабильные строковые ресурсы для удобного отображения сообщений в пользовательском интерфейсе.
+ *
+ * Исходные сообщения бэкэнда и тексты исключений регистрируются в журнале репозитория, но пользовательский интерфейс получает только
+ * короткие локализованные ресурсы, поэтому трассировки стека, внутренние английские тексты и подробности SSH не отображаются.
+ */
+@StringRes
+fun userFriendlyApiMessageRes(message: String?): Int {
     val rawMessage = message?.trim().orEmpty()
-    if (rawMessage.isBlank()) return DEFAULT_REQUEST_ERROR
+    if (rawMessage.isBlank()) return R.string.error_request_failed
 
     val normalized = rawMessage.lowercase(Locale.ROOT)
     return when {
         normalized.contains("invalid api key") ||
             normalized.contains("unauthorized") ||
             normalized.contains("неверный api-ключ") ->
-            "Неверный API-ключ. Проверьте настройки подключения."
+            R.string.error_invalid_api_key
 
         normalized.contains("server action key is required") ||
             normalized.contains("x-action-key") ->
-            "Для перезагрузки нужен X-Action-Key. Укажите его в настройках."
+            R.string.error_action_key_required
 
         normalized.contains("forbidden") ->
-            "Недостаточно прав для выполнения действия."
+            R.string.error_forbidden
 
         normalized.contains("not found") ||
             normalized.contains("сервер не найден") ->
-            "Сервер не найден."
+            R.string.error_server_not_found
 
         normalized.contains("too many requests") ||
             normalized.contains("слишком много запросов") ->
-            "Слишком много запросов. Повторите позже."
+            R.string.error_too_many_requests
 
         normalized.contains("timeout") ||
             normalized.contains("timed out") ||
             normalized.contains("таймаут") ||
             normalized.contains("превышено время") ->
-            "Не удалось подключиться к серверу."
+            R.string.error_connection_failed
 
         normalized.contains("unknownhost") ||
             normalized.contains("failed to connect") ||
             normalized.contains("connection refused") ->
-            "Не удалось подключиться к серверу."
+            R.string.error_connection_failed
 
         normalized.contains("service unavailable") ||
             normalized.contains("temporarily unavailable") ->
-            "Сервер временно недоступен."
+            R.string.error_service_unavailable
 
         normalized.contains("serialization") ||
             normalized.contains("unexpected json") ||
             normalized.contains("format") ->
-            "Не удалось прочитать ответ сервера."
+            R.string.error_response_format
 
-        rawMessage.hasLatinLetters() ->
-            DEFAULT_REQUEST_ERROR
-
-        else -> rawMessage
+        else -> R.string.error_request_failed
     }
 }
 
-fun Throwable.toUserFriendlyMessage(defaultMessage: String = DEFAULT_REQUEST_ERROR): String =
-    userFriendlyApiMessage(message ?: defaultMessage)
-
-private fun String.hasLatinLetters(): Boolean = any { it in 'A'..'Z' || it in 'a'..'z' }
+@StringRes
+fun Throwable.toUserFriendlyMessageRes(@StringRes defaultResId: Int = R.string.error_request_failed): Int =
+    when (this) {
+        is ApiException -> messageResId
+        else -> userFriendlyApiMessageRes(message).takeUnless { it == R.string.error_request_failed }
+            ?: defaultResId
+    }

@@ -8,10 +8,11 @@ import com.vennilay.kernvox.data.model.Server
 import com.vennilay.kernvox.data.model.toHubOverview
 import com.vennilay.kernvox.data.repository.ApiServersRepository
 import com.vennilay.kernvox.data.repository.RepositoryFactory
-import com.vennilay.kernvox.data.repository.toUserFriendlyMessage
+import com.vennilay.kernvox.data.repository.toUserFriendlyMessageRes
 import com.vennilay.kernvox.data.storage.AppSettings
 import com.vennilay.kernvox.data.storage.AppSettingsRepository
 import com.vennilay.kernvox.ui.state.UiState
+import com.vennilay.kernvox.ui.state.UiText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -78,7 +79,7 @@ class ServersViewModel(
                         _hubOverview.value = null
                         _isRefreshing.value = false
                         _uiState.value = UiState.Error(
-                            "Настройки не указаны. Перейдите в Настройки и укажите URL сервера и API-ключ.",
+                            UiText.resource(com.vennilay.kernvox.R.string.error_missing_connection_settings),
                         )
                     }
                 }
@@ -103,7 +104,7 @@ class ServersViewModel(
                 _uiState.value = UiState.Success(serversList)
             } catch (e: Exception) {
                 if (_uiState.value !is UiState.Success) {
-                    _uiState.value = UiState.Error(e.toUserFriendlyMessage())
+                    _uiState.value = UiState.Error(UiText.resource(e.toUserFriendlyMessageRes()))
                 }
             } finally {
                 _isRefreshing.value = false

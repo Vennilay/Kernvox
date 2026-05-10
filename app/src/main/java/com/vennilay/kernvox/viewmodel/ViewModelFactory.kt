@@ -35,3 +35,13 @@ class SettingsViewModelFactory(
         return SettingsViewModel(AppSettingsRepository(application)) as T
     }
 }
+
+class LockViewModelFactory(
+    private val application: Application,
+) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        require(modelClass.isAssignableFrom(LockViewModel::class.java)) { "Unknown ViewModel class" }
+        return LockViewModel(AppSettingsRepository(application)) as T
+    }
+}

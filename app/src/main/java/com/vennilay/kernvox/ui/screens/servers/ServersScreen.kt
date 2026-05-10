@@ -100,7 +100,7 @@ fun ServersScreen(
 
                 is UiState.Error -> ErrorContent(
                     title = stringResource(R.string.servers_error_title),
-                    message = state.message,
+                    message = state.message.asString(),
                     retryLabel = stringResource(R.string.servers_retry),
                     onRetry = { viewModel.loadServers() },
                     paddingValues = paddingValues,

@@ -81,9 +81,10 @@ fun ServerDetailScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     val viewModel: DetailViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
         factory = DetailViewModelFactory(
-            LocalContext.current.applicationContext as android.app.Application,
+            context.applicationContext as android.app.Application,
             serverId,
         ),
     )
@@ -103,7 +104,7 @@ fun ServerDetailScreen(
 
     LaunchedEffect(viewModel) {
         viewModel.messages.collect { message ->
-            snackbarHostState.showSnackbar(message)
+            snackbarHostState.showSnackbar(message.resolve(context))
         }
     }
     LaunchedEffect(pagerState.currentPage) {
@@ -139,7 +140,7 @@ fun ServerDetailScreen(
 
                 is UiState.Error -> ErrorContent(
                     title = stringResource(R.string.server_detail_loading_error),
-                    message = state.message,
+                    message = state.message.asString(),
                     retryLabel = stringResource(R.string.server_detail_retry),
                     onRetry = { viewModel.refresh() },
                     paddingValues = paddingValues,
@@ -196,6 +197,7 @@ fun ServerDetailScreen(
                                     )
                                     1 -> ProcessesTab(
                                         viewModel = viewModel,
+                                        isServerAvailable = state.data.isAvailable != false,
                                     )
 
                                     2 -> HistoryTab(
@@ -256,9 +258,11 @@ private fun OverviewTab(
     val daysUnit = stringResource(R.string.time_days)
     val hoursUnit = stringResource(R.string.time_hours)
     val minutesUnit = stringResource(R.string.time_minutes)
+    val secondsUnit = stringResource(R.string.time_seconds)
     val kbUnit = stringResource(R.string.network_bytes_kb)
     val mbUnit = stringResource(R.string.network_bytes_mb)
     val gbUnit = stringResource(R.string.network_bytes_gb)
+    val bytesUnit = stringResource(R.string.network_bytes_b)
 
     Column(
         modifier = Modifier
@@ -346,13 +350,13 @@ private fun OverviewTab(
         if (server.networkRxBytes != null || server.networkTxBytes != null) {
             InfoTile(
                 label = stringResource(R.string.server_detail_network_rx),
-                value = formatBytes(server.networkRxBytes, kbUnit, mbUnit, gbUnit),
+                value = formatBytes(server.networkRxBytes, kbUnit, mbUnit, gbUnit, bytesUnit),
                 icon = R.drawable.ic_monitoring,
             )
             Spacer(modifier = Modifier.height(Spacing.sm))
             InfoTile(
                 label = stringResource(R.string.server_detail_network_tx),
-                value = formatBytes(server.networkTxBytes, kbUnit, mbUnit, gbUnit),
+                value = formatBytes(server.networkTxBytes, kbUnit, mbUnit, gbUnit, bytesUnit),
                 icon = R.drawable.ic_monitoring,
             )
             Spacer(modifier = Modifier.height(Spacing.sm))
@@ -367,7 +371,7 @@ private fun OverviewTab(
         } ?: server.uptimeSeconds?.let { seconds ->
             InfoTile(
                 label = stringResource(R.string.server_detail_uptime),
-                value = formatUptime(seconds.toLong(), daysUnit, hoursUnit, minutesUnit),
+                value = formatUptime(seconds.toLong(), daysUnit, hoursUnit, minutesUnit, secondsUnit),
                 icon = R.drawable.ic_uptime,
             )
         }
@@ -389,6 +393,7 @@ private fun OverviewTab(
 @Composable
 private fun ProcessesTab(
     viewModel: DetailViewModel,
+    isServerAvailable: Boolean,
 ) {
     val processesState by viewModel.processesState.collectAsState()
 
@@ -402,7 +407,7 @@ private fun ProcessesTab(
 
             is UiState.Error -> ErrorContent(
                 title = stringResource(R.string.processes_error_title),
-                message = state.message,
+                message = state.message.asString(),
                 retryLabel = stringResource(R.string.processes_retry),
                 onRetry = { viewModel.loadProcesses(force = true) },
                 paddingValues = PaddingValues(Spacing.md),
@@ -411,8 +416,20 @@ private fun ProcessesTab(
             is UiState.Success -> {
                 if (state.data.isEmpty()) {
                     EmptyState(
-                        title = stringResource(R.string.processes_empty_title),
-                        subtitle = stringResource(R.string.processes_empty_subtitle),
+                        title = stringResource(
+                            if (isServerAvailable) {
+                                R.string.processes_empty_title
+                            } else {
+                                R.string.processes_offline_title
+                            },
+                        ),
+                        subtitle = stringResource(
+                            if (isServerAvailable) {
+                                R.string.processes_empty_subtitle
+                            } else {
+                                R.string.processes_offline_subtitle
+                            },
+                        ),
                     )
                 } else {
                     LazyColumn(
@@ -453,7 +470,7 @@ private fun HistoryTab(
 
             is UiState.Error -> ErrorContent(
                 title = stringResource(R.string.history_error_title),
-                message = state.message,
+                message = state.message.asString(),
                 retryLabel = stringResource(R.string.history_retry),
                 onRetry = { viewModel.loadHistory(force = true) },
                 paddingValues = PaddingValues(Spacing.md),

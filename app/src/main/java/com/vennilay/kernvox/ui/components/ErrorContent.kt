@@ -22,6 +22,9 @@ import androidx.compose.ui.unit.dp
 import com.vennilay.kernvox.R
 import com.vennilay.kernvox.ui.theme.Spacing
 
+/**
+ * Дружелюбное, лаконичное сообщение об ошибке, используемое вместо отображения технических сбоев на весь экран.
+ */
 @Composable
 fun ErrorContent(
     title: String,
