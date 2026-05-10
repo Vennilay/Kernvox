@@ -1,13 +1,13 @@
 # Kernvox
 
+<img width="1672" height="941" alt="изображение" src="https://github.com/user-attachments/assets/b851cbda-e268-4c82-8e62-1e30db06bfc4" />
+
+
 > **Связанные проекты:**
 > - 🖥️ [KernvoxHub](https://github.com/Vennilay/KernvoxHub) — серверный хаб для сбора метрик и предоставления данных приложению Kernvox
 > - 📱 Kernvox (этот репозиторий) — Android-клиент для мониторинга серверов
 
 ---
-<img width="1024" height="1024" alt="изображение" src="https://github.com/user-attachments/assets/eb61039b-f939-4541-ad44-4510dfed9eb0" />
-
-
 
 
 ## Содержание
