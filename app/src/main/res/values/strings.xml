@@ -11,6 +11,7 @@
     <string name="home_feature_uptime">Отслеживание аптайма</string>
     <string name="home_feature_quickview">Быстрый обзор инфраструктуры</string>
     <string name="home_open_app_button">Перейти к серверам</string>
+    <string name="app_loading">Загрузка приложения</string>
 
     <!-- Servers Screen -->
     <string name="servers_title">Серверы</string>
@@ -33,7 +34,7 @@
     <string name="servers_add_soon_snackbar">Добавление сервера — скоро</string>
     <string name="servers_uptime_label">Аптайм</string>
     <string name="servers_last_checked_label">Проверен</string>
-    <string name="servers_error_title">Ошибка</string>
+    <string name="servers_error_title">Не удалось загрузить серверы</string>
     <string name="servers_retry">Повторить</string>
     <string name="servers_refresh_cd">Обновить</string>
     <string name="servers_settings_cd">Настройки</string>
@@ -48,6 +49,7 @@
     <string name="server_card_ram_label">RAM</string>
     <string name="server_card_disk_label">Диск</string>
     <string name="server_card_no_data">—</string>
+    <string name="server_card_status_unavailable">Нет связи</string>
 
     <!-- Server Detail Screen -->
     <string name="back_button">Назад</string>
@@ -57,7 +59,7 @@
     <string name="server_detail_status">Статус</string>
     <string name="server_detail_uptime">Аптайм</string>
     <string name="server_detail_last_checked">Последняя проверка</string>
-    <string name="server_detail_loading_error">Ошибка загрузки</string>
+    <string name="server_detail_loading_error">Не удалось загрузить данные</string>
     <string name="server_detail_retry">Повторить</string>
     <string name="server_detail_username">Пользователь</string>
     <string name="server_detail_cpu">CPU</string>
@@ -71,11 +73,14 @@
     <string name="settings_title">Настройки</string>
     <string name="settings_back_cd">Назад</string>
     <string name="settings_section_title">Подключение к KernvoxHub</string>
-    <string name="settings_description">Укажите URL вашего сервера KernvoxHub и API-ключ для подключения.</string>
+    <string name="settings_description">Укажите URL сервера, X-API-Key для чтения данных и при необходимости X-Action-Key для перезагрузки.</string>
     <string name="settings_server_url_label">URL сервера</string>
     <string name="settings_server_url_placeholder">https://kernvox.example.com</string>
     <string name="settings_api_key_label">API-ключ</string>
     <string name="settings_api_key_placeholder">Ваш X-API-Key</string>
+    <string name="settings_action_key_label">Action-key</string>
+    <string name="settings_action_key_placeholder">Ваш X-Action-Key</string>
+    <string name="settings_action_key_hint">Нужен только для защищённой перезагрузки сервера через KernvoxHub.</string>
     <string name="settings_save_button">Сохранить</string>
     <string name="settings_saved_message">Настройки сохранены</string>
 
@@ -88,17 +93,28 @@
     <string name="server_detail_cpu_cores">Ядра CPU</string>
     <string name="server_detail_network_rx">Получено (RX)</string>
     <string name="server_detail_network_tx">Отправлено (TX)</string>
+    <string name="server_detail_reboot_button">Перезагрузить сервер</string>
+    <string name="server_detail_reboot_in_progress">Отправка команды…</string>
+    <string name="server_detail_reboot_confirm_title">Подтвердите перезагрузку</string>
+    <string name="server_detail_reboot_confirm_message">KernvoxHub отправит на сервер команду reboot через SSH. Продолжить?</string>
+    <string name="server_detail_reboot_confirm_button">Перезагрузить</string>
+    <string name="server_detail_reboot_cancel_button">Отмена</string>
 
     <!-- Processes tab -->
     <string name="processes_empty_title">Нет данных о процессах</string>
     <string name="processes_empty_subtitle">Информация о процессах недоступна</string>
-    <string name="processes_error_title">Ошибка загрузки процессов</string>
+    <string name="processes_offline_title">Сервер недоступен</string>
+    <string name="processes_offline_subtitle">Процессы нельзя загрузить, пока сервер offline. Запустите сервер и обновите данные.</string>
+    <string name="process_cpu_label">CPU</string>
+    <string name="process_ram_label">RAM</string>
+    <string name="process_pid_label">PID %1$d</string>
+    <string name="processes_error_title">Процессы недоступны</string>
     <string name="processes_retry">Повторить</string>
 
     <!-- History tab -->
     <string name="history_empty_title">История метрик пуста</string>
     <string name="history_empty_subtitle">Данные за выбранный период отсутствуют</string>
-    <string name="history_error_title">Ошибка загрузки истории</string>
+    <string name="history_error_title">История недоступна</string>
     <string name="history_retry">Повторить</string>
     <string name="history_cpu_label">CPU</string>
     <string name="history_ram_label">RAM</string>
@@ -109,10 +125,78 @@
     <string name="network_bytes_kb">КБ</string>
     <string name="network_bytes_mb">МБ</string>
     <string name="network_bytes_gb">ГБ</string>
+    <string name="network_bytes_b">Б</string>
 
     <!-- Settings — validation and loading -->
     <string name="settings_url_error">URL должен начинаться с http:// или https://</string>
     <string name="settings_saved_ok">✓ Настройки сохранены</string>
+    <string name="settings_section_appearance">Внешний вид</string>
+    <string name="settings_section_security">Безопасность</string>
+    <string name="settings_section_app">Приложение</string>
+    <string name="settings_section_api">Серверы и API</string>
+    <string name="settings_theme_title">Тема приложения</string>
+    <string name="settings_theme_system">Системная</string>
+    <string name="settings_theme_light">Светлая</string>
+    <string name="settings_theme_dark">Тёмная</string>
+    <string name="settings_password_lock_title">Вход по паролю</string>
+    <string name="settings_password_lock_subtitle">Запрашивать код при запуске приложения</string>
+    <string name="settings_biometric_title">Вход по отпечатку</string>
+    <string name="settings_biometric_subtitle">Разблокировка через биометрию с паролем как запасным вариантом</string>
+    <string name="settings_biometric_unavailable">Биометрия недоступна на этом устройстве</string>
+    <string name="settings_biometric_requires_password">Сначала включите вход по паролю</string>
+    <string name="settings_reset_welcome_title">Показать welcome снова</string>
+    <string name="settings_reset_welcome_subtitle">Сбросить экран первого запуска</string>
+    <string name="settings_app_version">Версия %1$s</string>
+    <string name="settings_password_dialog_title">Задайте пароль</string>
+    <string name="settings_password_confirm_title">Подтвердите пароль</string>
+    <string name="settings_password_label">Пароль или код</string>
+    <string name="settings_password_repeat_label">Повторите пароль</string>
+    <string name="settings_current_password_label">Текущий пароль</string>
+    <string name="settings_password_save">Сохранить</string>
+    <string name="settings_password_disable">Отключить</string>
+    <string name="settings_password_cancel">Отмена</string>
+    <string name="settings_password_too_short">Пароль должен быть не короче 4 символов</string>
+    <string name="settings_password_mismatch">Пароли не совпадают</string>
+    <string name="settings_password_wrong">Неверный пароль</string>
+    <string name="settings_password_enabled">Вход по паролю включён</string>
+    <string name="settings_password_disabled">Вход по паролю отключён</string>
+    <string name="settings_welcome_reset_done">Welcome будет показан при следующем запуске</string>
+
+    <!-- App lock -->
+    <string name="lock_title">Вход в Kernvox</string>
+    <string name="lock_subtitle">Введите пароль приложения</string>
+    <string name="lock_password_label">Пароль</string>
+    <string name="lock_unlock_button">Войти</string>
+    <string name="lock_biometric_button">Войти по отпечатку</string>
+    <string name="lock_wrong_password">Неверный пароль</string>
+    <string name="lock_empty_password">Введите пароль</string>
+    <string name="lock_biometric_title">Разблокировать Kernvox</string>
+    <string name="lock_biometric_subtitle">Подтвердите вход отпечатком</string>
+    <string name="lock_biometric_negative">Ввести пароль</string>
+    <string name="lock_biometric_failed">Не удалось подтвердить отпечаток</string>
+    <string name="lock_biometric_cancelled">Биометрическая проверка отменена</string>
+
+    <!-- User-facing errors -->
+    <string name="error_request_failed">Не удалось выполнить запрос. Проверьте подключение и повторите.</string>
+    <string name="error_invalid_api_key">Неверный API-ключ. Проверьте настройки подключения.</string>
+    <string name="error_action_key_required">Для перезагрузки нужен X-Action-Key. Укажите его в настройках.</string>
+    <string name="error_forbidden">Недостаточно прав для выполнения действия.</string>
+    <string name="error_server_not_found">Сервер не найден.</string>
+    <string name="error_too_many_requests">Слишком много запросов. Повторите позже.</string>
+    <string name="error_connection_failed">Не удалось подключиться к серверу.</string>
+    <string name="error_response_timeout">Сервер не ответил вовремя.</string>
+    <string name="error_service_unavailable">Сервер временно недоступен.</string>
+    <string name="error_response_format">Не удалось прочитать ответ сервера.</string>
+    <string name="error_action_unavailable">Сервер временно недоступен для этой команды.</string>
+    <string name="error_host_verification_failed">Не удалось подтвердить сервер. Проверьте настройки KernvoxHub.</string>
+    <string name="error_missing_connection_settings">Настройки не указаны. Перейдите в настройки и укажите URL сервера и API-ключ.</string>
+    <string name="error_settings_not_loaded">Настройки подключения не загружены.</string>
+    <string name="error_processes_load">Не удалось загрузить процессы.</string>
+    <string name="error_processes_update">Не удалось обновить процессы.</string>
+    <string name="error_history_load">Не удалось загрузить историю.</string>
+    <string name="error_history_update">Не удалось обновить историю.</string>
+    <string name="error_reboot_send">Не удалось отправить команду перезагрузки.</string>
+    <string name="server_detail_reboot_success">Команда перезагрузки принята сервером.</string>
 
     <!-- Time units -->
     <string name="time_days">дн</string>

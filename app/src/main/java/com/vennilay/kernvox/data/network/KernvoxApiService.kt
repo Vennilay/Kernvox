@@ -2,15 +2,19 @@ package com.vennilay.kernvox.data.network
 
 import com.vennilay.kernvox.data.network.dto.DashboardResponseDto
 import com.vennilay.kernvox.data.network.dto.MetricsHistoryResponseDto
+import com.vennilay.kernvox.data.network.dto.ServerActionResponseDto
 import com.vennilay.kernvox.data.network.dto.ServerDetailsDto
 import com.vennilay.kernvox.data.network.dto.ServerProcessesDto
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
+import io.ktor.client.request.post
 
 class KernvoxApiService(
     private val httpClient: HttpClient,
+    private val actionKey: String,
 ) {
 
     /**
@@ -61,5 +65,23 @@ class KernvoxApiService(
                 parameter("limit", limit)
             }
             .body()
+    }
+
+    /**
+     * POST /api/v1/servers/{id}/actions/reboot
+     * Отправка команды на перезагрузку сервера.
+     */
+    suspend fun rebootServer(serverId: Int): ServerActionResponseDto {
+        return httpClient
+            .post("/api/v1/servers/$serverId/actions/reboot") {
+                if (actionKey.isNotBlank()) {
+                    header(ACTION_KEY_HEADER, actionKey)
+                }
+            }
+            .body()
+    }
+
+    private companion object {
+        const val ACTION_KEY_HEADER = "X-Action-Key"
     }
 }

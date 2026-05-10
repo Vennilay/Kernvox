@@ -3,6 +3,7 @@ package com.vennilay.kernvox.data.model
 import com.vennilay.kernvox.data.network.dto.DashboardServerDto
 import com.vennilay.kernvox.data.network.dto.MetricEntryDto
 import com.vennilay.kernvox.data.network.dto.ProcessInfoDto
+import com.vennilay.kernvox.data.network.dto.ServerActionResponseDto
 import com.vennilay.kernvox.data.network.dto.ServerDetailsDto
 import java.net.URI
 
@@ -91,6 +92,13 @@ fun MetricEntryDto.toMetricEntry(): MetricEntry = MetricEntry(
     uptimeSeconds = uptimeSeconds,
     isAvailable = isAvailable,
     timestamp = timestamp,
+)
+
+fun ServerActionResponseDto.toServerActionResult(): ServerActionResult = ServerActionResult(
+    action = action,
+    status = status,
+    message = message,
+    createdAt = createdAt,
 )
 
 fun List<Server>.toHubOverview(baseUrl: String): HubOverview {

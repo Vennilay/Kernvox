@@ -80,10 +80,16 @@ private val LightColorScheme = lightColorScheme(
     outline = Color(0xFF94A3B8)
 )
 
+/**
+ * Применяет цветовую схему Material 3 и стиль системной панели к приложению.
+ *
+ * По умолчанию Kernvox использует стабильную палитру синих и бирюзовых оттенков, чтобы светлые и тёмные темы оставались читаемыми
+ * на всех устройствах
+ */
 @Composable
 fun KernvoxTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

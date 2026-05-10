@@ -2,9 +2,13 @@ package com.vennilay.kernvox.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vennilay.kernvox.R
+import com.vennilay.kernvox.data.repository.toUserFriendlyMessageRes
 import com.vennilay.kernvox.data.storage.AppSettings
 import com.vennilay.kernvox.data.storage.AppSettingsRepository
+import com.vennilay.kernvox.data.storage.ThemeMode
 import com.vennilay.kernvox.ui.state.UiState
+import com.vennilay.kernvox.ui.state.UiText
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,19 +32,86 @@ class SettingsViewModel(
                 val settings = settingsRepository.settings.first()
                 _settingsState.value = UiState.Success(settings)
             } catch (e: Exception) {
-                _settingsState.value = UiState.Error(e.message ?: "Неизвестная ошибка")
+                _settingsState.value = UiState.Error(UiText.resource(e.toUserFriendlyMessageRes()))
             }
         }
     }
 
-    fun saveSettings(serverUrl: String, apiKey: String) {
+    fun saveSettings(serverUrl: String, apiKey: String, actionKey: String) {
         viewModelScope.launch {
+            val previousSettings = (_settingsState.value as? UiState.Success)?.data
             try {
                 _settingsState.value = UiState.Loading
-                settingsRepository.saveSettings(serverUrl, apiKey)
-                _settingsState.value = UiState.Success(AppSettings(serverUrl, apiKey))
+                settingsRepository.saveSettings(serverUrl, apiKey, actionKey)
+                _settingsState.value = UiState.Success(
+                    AppSettings(
+                        serverUrl = serverUrl,
+                        apiKey = apiKey,
+                        actionKey = actionKey,
+                        hasSeenWelcome = previousSettings?.hasSeenWelcome ?: false,
+                        themeMode = previousSettings?.themeMode ?: ThemeMode.SYSTEM,
+                        isPasswordLockEnabled = previousSettings?.isPasswordLockEnabled ?: false,
+                        isBiometricUnlockEnabled = previousSettings?.isBiometricUnlockEnabled ?: false,
+                    )
+                )
             } catch (e: Exception) {
-                _settingsState.value = UiState.Error(e.message ?: "Не удалось сохранить")
+                _settingsState.value = UiState.Error(UiText.resource(e.toUserFriendlyMessageRes()))
+            }
+        }
+    }
+
+    fun saveThemeMode(themeMode: ThemeMode) {
+        updateSettings { settings ->
+            settingsRepository.saveThemeMode(themeMode)
+            settings.copy(themeMode = themeMode)
+        }
+    }
+
+    fun resetWelcome() {
+        updateSettings { settings ->
+            settingsRepository.resetWelcome()
+            settings.copy(hasSeenWelcome = false)
+        }
+    }
+
+    fun enablePassword(password: String) {
+        updateSettings { settings ->
+            settingsRepository.setPassword(password)
+            settings.copy(isPasswordLockEnabled = true)
+        }
+    }
+
+    fun disablePassword(currentPassword: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val verified = settingsRepository.verifyPassword(currentPassword)
+            if (verified) {
+                updateSettings { settings ->
+                    settingsRepository.clearPassword()
+                    settings.copy(
+                        isPasswordLockEnabled = false,
+                        isBiometricUnlockEnabled = false,
+                    )
+                }
+            }
+            onResult(verified)
+        }
+    }
+
+    fun setBiometricUnlockEnabled(enabled: Boolean) {
+        updateSettings { settings ->
+            settingsRepository.setBiometricUnlockEnabled(enabled)
+            settings.copy(isBiometricUnlockEnabled = enabled)
+        }
+    }
+
+    private fun updateSettings(block: suspend (AppSettings) -> AppSettings) {
+        viewModelScope.launch {
+            val current = (_settingsState.value as? UiState.Success)?.data
+                ?: settingsRepository.settings.first()
+            try {
+                _settingsState.value = UiState.Success(block(current))
+            } catch (e: Exception) {
+                _settingsState.value = UiState.Error(UiText.resource(R.string.error_request_failed))
             }
         }
     }

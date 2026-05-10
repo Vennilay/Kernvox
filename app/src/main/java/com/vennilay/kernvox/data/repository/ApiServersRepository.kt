@@ -1,18 +1,29 @@
 package com.vennilay.kernvox.data.repository
 
+import android.util.Log
+import androidx.annotation.StringRes
+import com.vennilay.kernvox.R
 import com.vennilay.kernvox.data.model.MetricEntry
 import com.vennilay.kernvox.data.model.Process
 import com.vennilay.kernvox.data.model.Server
+import com.vennilay.kernvox.data.model.ServerActionResult
 import com.vennilay.kernvox.data.model.toMetricEntry
 import com.vennilay.kernvox.data.model.toProcess
 import com.vennilay.kernvox.data.model.toServer
+import com.vennilay.kernvox.data.model.toServerActionResult
 import com.vennilay.kernvox.data.network.KernvoxApiService
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.network.sockets.ConnectTimeoutException
 import io.ktor.client.network.sockets.SocketTimeoutException
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import java.net.ConnectException
 import java.net.UnknownHostException
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 class ApiServersRepository(
     private val apiService: KernvoxApiService,
@@ -43,12 +54,22 @@ class ApiServersRepository(
             ).metrics.map { it.toMetricEntry() }
         }
 
+    override suspend fun rebootServer(serverId: Int): ServerActionResult =
+        safeCall { apiService.rebootServer(serverId).toServerActionResult() }
+
     fun close() = httpClient.close()
 
     private suspend fun <T> safeCall(block: suspend () -> T): T =
         try {
             block()
+        } catch (e: ClientRequestException) {
+            Log.w(TAG, "KernvoxHub client error: ${e.response.status}", e)
+            throw mapClientException(e)
+        } catch (e: ServerResponseException) {
+            Log.w(TAG, "KernvoxHub server error: ${e.response.status}", e)
+            throw mapServerException(e)
         } catch (e: Exception) {
+            Log.w(TAG, "KernvoxHub request failed", e)
             throw mapException(e)
         }
 
@@ -56,46 +77,86 @@ class ApiServersRepository(
         return when (e) {
             is ConnectTimeoutException,
             is ConnectException,
-                -> ApiException("Таймаут подключения. Проверьте URL сервера.", 0)
+                -> ApiException(R.string.error_connection_failed, 0)
 
             is SocketTimeoutException ->
-                ApiException("Превышено время ожидания ответа от сервера.", 0)
+                ApiException(R.string.error_response_timeout, 0)
 
             is UnknownHostException ->
-                ApiException("Не удалось найти сервер. Проверьте URL.", 0)
-
-            is io.ktor.client.plugins.ClientRequestException -> {
-                val status = e.response.status
-                when (status) {
-                    HttpStatusCode.Unauthorized ->
-                        ApiException("Неверный API-ключ. Проверьте настройки.", 401)
-
-                    HttpStatusCode.Forbidden ->
-                        ApiException("Доступ запрещён. Проверьте API-ключ.", 403)
-
-                    HttpStatusCode.NotFound ->
-                        ApiException("Сервер не найден.", 404)
-
-                    else ->
-                        ApiException(
-                            "Ошибка сервера: ${status.value} ${status.description}",
-                            status.value
-                        )
-                }
-            }
-
-            is io.ktor.client.plugins.ServerResponseException ->
-                ApiException("Ошибка на стороне сервера KernvoxHub.", 0)
+                ApiException(R.string.error_connection_failed, 0)
 
             is kotlinx.serialization.SerializationException ->
-                ApiException("Неожиданный формат ответа от сервера.", 0)
+                ApiException(R.string.error_response_format, 0)
 
-            else -> ApiException(e.message ?: "Неизвестная ошибка", 0)
+            else -> ApiException(userFriendlyApiMessageRes(e.message), 0)
         }
+    }
+
+    private suspend fun mapClientException(e: ClientRequestException): ApiException {
+        val detail = extractErrorDetail(e.response.bodyAsText())
+        return when (e.response.status) {
+            HttpStatusCode.Unauthorized ->
+                ApiException(R.string.error_invalid_api_key, 401)
+
+            HttpStatusCode.Forbidden ->
+                ApiException(
+                    userFriendlyApiMessageRes(detail ?: "Forbidden"),
+                    403,
+                )
+
+            HttpStatusCode.NotFound ->
+                ApiException(userFriendlyApiMessageRes(detail ?: "Server not found"), 404)
+
+            HttpStatusCode.TooManyRequests ->
+                ApiException(userFriendlyApiMessageRes(detail ?: "Too many requests"), 429)
+
+            else ->
+                ApiException(
+                    userFriendlyApiMessageRes(detail ?: e.response.status.description),
+                    e.response.status.value,
+                )
+        }
+    }
+
+    private suspend fun mapServerException(e: ServerResponseException): ApiException {
+        val detail = extractErrorDetail(e.response.bodyAsText())
+        return when (e.response.status) {
+            HttpStatusCode.ServiceUnavailable ->
+                ApiException(
+                    when (detail) {
+                        "SERVER_ACTION_TOKEN is not configured" ->
+                            R.string.error_action_unavailable
+
+                        "Host key verification failed" ->
+                            R.string.error_host_verification_failed
+
+                        else -> userFriendlyApiMessageRes(detail ?: "Service unavailable")
+                    },
+                    e.response.status.value,
+                )
+
+            else ->
+                ApiException(
+                    userFriendlyApiMessageRes(detail ?: "KernvoxHub server error"),
+                    e.response.status.value,
+                )
+        }
+    }
+
+    private fun extractErrorDetail(body: String): String? {
+        return runCatching {
+            Json.parseToJsonElement(body)
+                .jsonObject["detail"]
+                ?.jsonPrimitive
+                ?.content
+                ?.takeIf { it.isNotBlank() }
+        }.getOrNull() ?: body.trim().takeIf { it.isNotBlank() }
     }
 }
 
 class ApiException(
-    message: String,
+    @param:StringRes val messageResId: Int,
     val code: Int,
-) : Exception(message)
+) : Exception("api_error_$messageResId")
+
+private const val TAG = "ApiServersRepository"
