@@ -5,6 +5,10 @@
 > - 📱 Kernvox (этот репозиторий) — Android-клиент для мониторинга серверов
 
 ---
+<img width="1024" height="1024" alt="изображение" src="https://github.com/user-attachments/assets/eb61039b-f939-4541-ad44-4510dfed9eb0" />
+
+
+
 
 ## Содержание
 
