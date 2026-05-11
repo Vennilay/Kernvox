@@ -95,6 +95,9 @@
     <string name="server_detail_reboot_confirm_message">KernvoxHub отправит на сервер команду перезагрузки через SSH. Продолжить?</string>
     <string name="server_detail_reboot_confirm_button">Перезагрузить</string>
     <string name="server_detail_reboot_cancel_button">Отмена</string>
+    <string name="server_detail_reboot_auth_title">Подтвердите действие</string>
+    <string name="server_detail_reboot_auth_subtitle">Подтвердите перезагрузку сервера</string>
+    <string name="server_detail_reboot_auth_message">Введите пароль приложения или подтвердите вход биометрией, чтобы отправить команду перезагрузки.</string>
 
     <!-- Processes tab -->
     <string name="processes_empty_title">Нет данных о процессах</string>
@@ -125,6 +128,7 @@
 
     <!-- Settings — validation and loading -->
     <string name="settings_url_error">URL должен начинаться с http:// или https://</string>
+    <string name="settings_release_https_error">В release-версии необходимо использовать HTTPS.</string>
     <string name="settings_saved_ok">✓ Настройки сохранены</string>
     <string name="settings_section_appearance">Внешний вид</string>
     <string name="settings_section_security">Безопасность</string>
@@ -199,6 +203,7 @@
     <string name="error_action_unavailable">Сервер временно недоступен для этой команды.</string>
     <string name="error_host_verification_failed">Не удалось подтвердить сервер. Проверьте настройки KernvoxHub.</string>
     <string name="error_missing_connection_settings">Настройки не указаны. Перейдите в настройки и укажите URL сервера и API-ключ.</string>
+    <string name="error_release_https_required">В release-версии необходимо использовать HTTPS для адреса сервера.</string>
     <string name="error_settings_not_loaded">Настройки подключения не загружены.</string>
     <string name="error_processes_load">Не удалось загрузить процессы.</string>
     <string name="error_processes_update">Не удалось обновить процессы.</string>

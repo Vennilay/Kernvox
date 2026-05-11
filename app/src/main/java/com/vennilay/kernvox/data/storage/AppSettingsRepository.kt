@@ -2,6 +2,7 @@ package com.vennilay.kernvox.data.storage
 
 import android.content.Context
 import android.util.Base64
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -15,6 +16,7 @@ import javax.crypto.spec.PBEKeySpec
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
@@ -58,15 +60,30 @@ data class AppSettings(
  * Пароль приложения хранится в виде хеша PBKDF2 с добавлением случайного salt значения, но никогда в виде открытого текста. Это обеспечивает защиту
  * от случайного просмотра на локальном устройстве, при этом реализация остается независимой от конкретных библиотек.
  */
-class AppSettingsRepository(context: Context) {
+class AppSettingsRepository internal constructor(
+    private val dataStore: DataStore<Preferences>,
+    private val secretStorage: SecureSecretStorage,
+) {
 
-    private val dataStore = context.dataStore
+    constructor(context: Context) : this(context.dataStore, SecureSecretStorage())
 
-    val settings: Flow<AppSettings> = dataStore.data.map { prefs ->
+    val settings: Flow<AppSettings> = dataStore.data.onEach { prefs ->
+        migratePlaintextSecretsIfNeeded(prefs)
+    }.map { prefs ->
         AppSettings(
             serverUrl = prefs[KEY_SERVER_URL] ?: "",
-            apiKey = prefs[KEY_API_KEY] ?: "",
-            actionKey = prefs[KEY_ACTION_KEY] ?: "",
+            apiKey = readSecret(
+                prefs = prefs,
+                encryptedKey = KEY_ENCRYPTED_API_KEY,
+                legacyPlaintextKey = KEY_API_KEY,
+                secretName = "API key",
+            ),
+            actionKey = readSecret(
+                prefs = prefs,
+                encryptedKey = KEY_ENCRYPTED_ACTION_KEY,
+                legacyPlaintextKey = KEY_ACTION_KEY,
+                secretName = "action key",
+            ),
             hasSeenWelcome = prefs[KEY_HAS_SEEN_WELCOME] ?: false,
             themeMode = prefs[KEY_THEME_MODE]?.toThemeMode() ?: ThemeMode.SYSTEM,
             autoLockTimeout = AutoLockTimeout.fromStorageValue(prefs[KEY_AUTO_LOCK_TIMEOUT]),
@@ -76,10 +93,15 @@ class AppSettingsRepository(context: Context) {
     }
 
     suspend fun saveSettings(serverUrl: String, apiKey: String, actionKey: String) {
+        val encryptedApiKey = secretStorage.encryptString(apiKey)
+        val encryptedActionKey = secretStorage.encryptString(actionKey)
+
         dataStore.edit { prefs ->
             prefs[KEY_SERVER_URL] = serverUrl
-            prefs[KEY_API_KEY] = apiKey
-            prefs[KEY_ACTION_KEY] = actionKey
+            prefs.writeEncryptedSecret(KEY_ENCRYPTED_API_KEY, encryptedApiKey)
+            prefs.writeEncryptedSecret(KEY_ENCRYPTED_ACTION_KEY, encryptedActionKey)
+            prefs.remove(KEY_API_KEY)
+            prefs.remove(KEY_ACTION_KEY)
         }
     }
 
@@ -140,7 +162,64 @@ class AppSettingsRepository(context: Context) {
         )
     }
 
+    private suspend fun migratePlaintextSecretsIfNeeded(prefs: Preferences) {
+        if (prefs[KEY_API_KEY] == null && prefs[KEY_ACTION_KEY] == null) return
+
+        val encryptedApiKey = prefs[KEY_API_KEY]?.let { plaintext ->
+            runCatching { secretStorage.encryptString(plaintext) }
+                .onFailure { logSecretStorageFailure("API key migration", it) }
+                .getOrNull()
+        }
+        val encryptedActionKey = prefs[KEY_ACTION_KEY]?.let { plaintext ->
+            runCatching { secretStorage.encryptString(plaintext) }
+                .onFailure { logSecretStorageFailure("action key migration", it) }
+                .getOrNull()
+        }
+
+        dataStore.edit { mutablePrefs ->
+            encryptedApiKey?.let {
+                mutablePrefs.writeEncryptedSecret(KEY_ENCRYPTED_API_KEY, it)
+                mutablePrefs.remove(KEY_API_KEY)
+            }
+            encryptedActionKey?.let {
+                mutablePrefs.writeEncryptedSecret(KEY_ENCRYPTED_ACTION_KEY, it)
+                mutablePrefs.remove(KEY_ACTION_KEY)
+            }
+        }
+    }
+
+    private fun readSecret(
+        prefs: Preferences,
+        encryptedKey: Preferences.Key<String>,
+        legacyPlaintextKey: Preferences.Key<String>,
+        secretName: String,
+    ): String {
+        val encryptedValue = prefs[encryptedKey]
+        if (encryptedValue != null) {
+            return runCatching { secretStorage.decryptString(encryptedValue) }
+                .onFailure { logSecretStorageFailure("$secretName read", it) }
+                .getOrDefault("")
+        }
+        return prefs[legacyPlaintextKey] ?: ""
+    }
+
+    private fun androidx.datastore.preferences.core.MutablePreferences.writeEncryptedSecret(
+        key: Preferences.Key<String>,
+        encryptedValue: String,
+    ) {
+        if (encryptedValue.isEmpty()) {
+            remove(key)
+        } else {
+            this[key] = encryptedValue
+        }
+    }
+
+    private fun logSecretStorageFailure(operation: String, throwable: Throwable) {
+        Log.w(TAG, "Secure secret storage failed during $operation.", throwable)
+    }
+
     companion object {
+        private const val TAG = "AppSettingsRepository"
         private const val HASH_ITERATIONS = 120_000
         private const val HASH_KEY_LENGTH = 256
         private const val SALT_LENGTH_BYTES = 16
@@ -148,6 +227,8 @@ class AppSettingsRepository(context: Context) {
         private val KEY_SERVER_URL = stringPreferencesKey("server_url")
         private val KEY_API_KEY = stringPreferencesKey("api_key")
         private val KEY_ACTION_KEY = stringPreferencesKey("action_key")
+        private val KEY_ENCRYPTED_API_KEY = stringPreferencesKey("encrypted_api_key")
+        private val KEY_ENCRYPTED_ACTION_KEY = stringPreferencesKey("encrypted_action_key")
         private val KEY_HAS_SEEN_WELCOME = booleanPreferencesKey("has_seen_welcome")
         private val KEY_THEME_MODE = stringPreferencesKey("theme_mode")
         private val KEY_AUTO_LOCK_TIMEOUT = stringPreferencesKey("auto_lock_timeout")
