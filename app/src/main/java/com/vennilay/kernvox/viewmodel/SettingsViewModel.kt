@@ -3,6 +3,7 @@ package com.vennilay.kernvox.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vennilay.kernvox.R
+import com.vennilay.kernvox.data.network.ServerUrlValidator
 import com.vennilay.kernvox.data.repository.toUserFriendlyMessageRes
 import com.vennilay.kernvox.data.storage.AppSettings
 import com.vennilay.kernvox.data.storage.AppSettingsRepository
@@ -48,6 +49,10 @@ class SettingsViewModel(
         viewModelScope.launch {
             val previousSettings = (_settingsState.value as? UiState.Success)?.data
             try {
+                if (!ServerUrlValidator.isAllowed(serverUrl)) {
+                    _settingsState.value = UiState.Error(UiText.resource(R.string.error_release_https_required))
+                    return@launch
+                }
                 _settingsState.value = UiState.Loading
                 settingsRepository.saveSettings(serverUrl, apiKey, actionKey)
                 _settingsState.value = UiState.Success(

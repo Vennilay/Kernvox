@@ -33,7 +33,7 @@ object HttpClientFactory {
                     url(baseUrl)
                     contentType(ContentType.Application.Json)
                     if (apiKey.isNotBlank()) {
-                        header("X-API-Key", apiKey)
+                        header(API_KEY_HEADER, apiKey)
                     }
                 }
             }
@@ -50,8 +50,17 @@ object HttpClientFactory {
             if (BuildConfig.DEBUG) {
                 install(Logging) {
                     level = LogLevel.INFO
+                    sanitizeHeader { header ->
+                        header.equals(API_KEY_HEADER, ignoreCase = true) ||
+                            header.equals(ACTION_KEY_HEADER, ignoreCase = true) ||
+                            header.equals(AUTHORIZATION_HEADER, ignoreCase = true)
+                    }
                 }
             }
         }
     }
+
+    private const val API_KEY_HEADER = "X-API-Key"
+    private const val ACTION_KEY_HEADER = "X-Action-Key"
+    private const val AUTHORIZATION_HEADER = "Authorization"
 }

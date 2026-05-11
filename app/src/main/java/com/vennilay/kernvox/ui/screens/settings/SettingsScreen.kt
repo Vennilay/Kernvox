@@ -73,6 +73,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vennilay.kernvox.BuildConfig
 import com.vennilay.kernvox.R
 import com.vennilay.kernvox.auth.BiometricAuth
+import com.vennilay.kernvox.data.network.ServerUrlValidator
 import com.vennilay.kernvox.data.storage.AppSettings
 import com.vennilay.kernvox.data.storage.AutoLockTimeout
 import com.vennilay.kernvox.data.storage.ThemeMode
@@ -102,9 +103,9 @@ fun SettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var serverUrl by rememberSaveable { mutableStateOf("") }
-    var apiKey by rememberSaveable { mutableStateOf("") }
-    var actionKey by rememberSaveable { mutableStateOf("") }
-    var urlError by rememberSaveable { mutableStateOf(false) }
+    var apiKey by remember { mutableStateOf("") }
+    var actionKey by remember { mutableStateOf("") }
+    var urlErrorRes by rememberSaveable { mutableStateOf<Int?>(null) }
     var passwordDialog by rememberSaveable { mutableStateOf<PasswordDialogMode?>(null) }
 
     val settings = (settingsState as? UiState.Success)?.data
@@ -230,20 +231,22 @@ fun SettingsScreen(
                     serverUrl = serverUrl,
                     apiKey = apiKey,
                     actionKey = actionKey,
-                    urlError = urlError,
+                    urlErrorRes = urlErrorRes,
                     isSaving = isSaving,
                     onServerUrlChange = {
                         serverUrl = it
-                        urlError = false
+                        urlErrorRes = null
                     },
                     onApiKeyChange = { apiKey = it },
                     onActionKeyChange = { actionKey = it },
                     onSave = {
                         val url = serverUrl.trim()
                         if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                            urlError = true
+                            urlErrorRes = R.string.settings_url_error
+                        } else if (!ServerUrlValidator.isAllowed(url)) {
+                            urlErrorRes = R.string.settings_release_https_error
                         } else {
-                            urlError = false
+                            urlErrorRes = null
                             viewModel.saveSettings(url, apiKey.trim(), actionKey.trim())
                         }
                     },
@@ -391,7 +394,7 @@ private fun ApiSection(
     serverUrl: String,
     apiKey: String,
     actionKey: String,
-    urlError: Boolean,
+    urlErrorRes: Int?,
     isSaving: Boolean,
     onServerUrlChange: (String) -> Unit,
     onApiKeyChange: (String) -> Unit,
@@ -399,6 +402,9 @@ private fun ApiSection(
     onSave: () -> Unit,
 ) {
     SettingsSection(title = stringResource(R.string.settings_section_api)) {
+        val serverUrlSupportingText: (@Composable () -> Unit)? = urlErrorRes?.let { errorRes ->
+            { Text(stringResource(errorRes)) }
+        }
         Text(
             text = stringResource(R.string.settings_description),
             style = MaterialTheme.typography.bodyMedium,
@@ -414,10 +420,8 @@ private fun ApiSection(
                 .fillMaxWidth()
                 .bringIntoViewOnFocus(),
             singleLine = true,
-            isError = urlError,
-            supportingText = if (urlError) {
-                { Text(stringResource(R.string.settings_url_error)) }
-            } else null,
+            isError = urlErrorRes != null,
+            supportingText = serverUrlSupportingText,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
         )
         Spacer(modifier = Modifier.height(Spacing.md))

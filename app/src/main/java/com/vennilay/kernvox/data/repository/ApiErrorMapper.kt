@@ -2,6 +2,7 @@ package com.vennilay.kernvox.data.repository
 
 import androidx.annotation.StringRes
 import com.vennilay.kernvox.R
+import com.vennilay.kernvox.data.network.InsecureServerUrlException
 import java.util.Locale
 
 /**
@@ -65,6 +66,7 @@ fun userFriendlyApiMessageRes(message: String?): Int {
 fun Throwable.toUserFriendlyMessageRes(@StringRes defaultResId: Int = R.string.error_request_failed): Int =
     when (this) {
         is ApiException -> messageResId
+        is InsecureServerUrlException -> R.string.error_release_https_required
         else -> userFriendlyApiMessageRes(message).takeUnless { it == R.string.error_request_failed }
             ?: defaultResId
     }

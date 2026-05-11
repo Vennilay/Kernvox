@@ -1,5 +1,7 @@
 package com.vennilay.kernvox.ui.screens.serverDetail
 
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
@@ -9,6 +11,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +23,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.AlertDialog
@@ -27,6 +31,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -53,9 +58,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.fragment.app.FragmentActivity
 import com.vennilay.kernvox.R
+import com.vennilay.kernvox.auth.BiometricAuth
 import com.vennilay.kernvox.data.model.Server
+import com.vennilay.kernvox.data.storage.AppSettingsRepository
 import com.vennilay.kernvox.ui.components.EmptyState
 import com.vennilay.kernvox.ui.components.ErrorContent
 import com.vennilay.kernvox.ui.components.IconCircle
@@ -88,6 +98,11 @@ fun ServerDetailScreen(
             serverId,
         ),
     )
+    val settingsRepository = remember(context.applicationContext) {
+        AppSettingsRepository(context.applicationContext)
+    }
+    val settings by settingsRepository.settings.collectAsState(initial = null)
+    val activity = remember(context) { context.findFragmentActivity() }
 
     val uiState by viewModel.uiState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
@@ -101,6 +116,9 @@ fun ServerDetailScreen(
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var showRebootConfirmation by remember { mutableStateOf(false) }
+    var showRebootUnlock by remember { mutableStateOf(false) }
+    var rebootPassword by remember { mutableStateOf("") }
+    var rebootPasswordError by remember { mutableStateOf(false) }
 
     LaunchedEffect(viewModel) {
         viewModel.messages.collect { message ->
@@ -230,7 +248,13 @@ fun ServerDetailScreen(
                 TextButton(
                     onClick = {
                         showRebootConfirmation = false
-                        viewModel.rebootServer()
+                        if (settings?.isPasswordLockEnabled == true) {
+                            rebootPassword = ""
+                            rebootPasswordError = false
+                            showRebootUnlock = true
+                        } else {
+                            viewModel.rebootServer()
+                        }
                     },
                     enabled = !isRebooting,
                 ) {
@@ -247,6 +271,114 @@ fun ServerDetailScreen(
             },
         )
     }
+
+    if (showRebootUnlock) {
+        RebootUnlockDialog(
+            password = rebootPassword,
+            passwordError = rebootPasswordError,
+            biometricEnabled = settings?.isBiometricUnlockEnabled == true,
+            biometricAvailable = BiometricAuth.isAvailable(context) && activity != null,
+            onPasswordChange = {
+                rebootPassword = it
+                rebootPasswordError = false
+            },
+            onConfirmPassword = {
+                coroutineScope.launch {
+                    if (settingsRepository.verifyPassword(rebootPassword)) {
+                        rebootPassword = ""
+                        rebootPasswordError = false
+                        showRebootUnlock = false
+                        viewModel.rebootServer()
+                    } else {
+                        rebootPasswordError = true
+                    }
+                }
+            },
+            onBiometricClick = {
+                activity?.let { promptActivity ->
+                    BiometricAuth.showPrompt(
+                        activity = promptActivity,
+                        titleRes = R.string.server_detail_reboot_auth_title,
+                        subtitleRes = R.string.server_detail_reboot_auth_subtitle,
+                        negativeButtonRes = R.string.server_detail_reboot_cancel_button,
+                        onSuccess = {
+                            rebootPassword = ""
+                            rebootPasswordError = false
+                            showRebootUnlock = false
+                            viewModel.rebootServer()
+                        },
+                        onError = {
+                            rebootPasswordError = true
+                        },
+                    )
+                }
+            },
+            onDismiss = {
+                rebootPassword = ""
+                rebootPasswordError = false
+                showRebootUnlock = false
+            },
+        )
+    }
+}
+
+@Composable
+private fun RebootUnlockDialog(
+    password: String,
+    passwordError: Boolean,
+    biometricEnabled: Boolean,
+    biometricAvailable: Boolean,
+    onPasswordChange: (String) -> Unit,
+    onConfirmPassword: () -> Unit,
+    onBiometricClick: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = stringResource(R.string.server_detail_reboot_auth_title))
+        },
+        text = {
+            Column {
+                Text(text = stringResource(R.string.server_detail_reboot_auth_message))
+                Spacer(modifier = Modifier.height(Spacing.md))
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = onPasswordChange,
+                    label = { Text(stringResource(R.string.lock_password_label)) },
+                    singleLine = true,
+                    isError = passwordError,
+                    supportingText = if (passwordError) {
+                        { Text(stringResource(R.string.lock_wrong_password)) }
+                    } else {
+                        null
+                    },
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirmPassword,
+                enabled = password.isNotBlank(),
+            ) {
+                Text(text = stringResource(R.string.lock_unlock_button))
+            }
+        },
+        dismissButton = {
+            Row {
+                if (biometricEnabled && biometricAvailable) {
+                    TextButton(onClick = onBiometricClick) {
+                        Text(text = stringResource(R.string.lock_biometric_button))
+                    }
+                }
+                TextButton(onClick = onDismiss) {
+                    Text(text = stringResource(R.string.server_detail_reboot_cancel_button))
+                }
+            }
+        },
+    )
 }
 
 @Composable
@@ -559,3 +691,10 @@ private fun ServerHeader(server: Server) {
         StatusBadge(isOnline = server.isAvailable ?: false)
     }
 }
+
+private tailrec fun Context.findFragmentActivity(): FragmentActivity? =
+    when (this) {
+        is FragmentActivity -> this
+        is ContextWrapper -> baseContext.findFragmentActivity()
+        else -> null
+    }
