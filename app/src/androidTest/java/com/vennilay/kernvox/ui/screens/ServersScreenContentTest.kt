@@ -32,10 +32,12 @@ class ServersScreenContentTest {
                     uiState = UiState.Loading,
                     hubOverview = null,
                     isRefreshing = false,
+                    isPasswordLockEnabled = false,
                     onNavigateToSettings = {},
                     onServerClick = {},
                     onRefresh = {},
                     onRetry = {},
+                    onLockClick = {},
                 )
             }
         }
@@ -54,10 +56,12 @@ class ServersScreenContentTest {
                     uiState = UiState.Error(UiText.resource(R.string.error_request_failed)),
                     hubOverview = null,
                     isRefreshing = false,
+                    isPasswordLockEnabled = false,
                     onNavigateToSettings = {},
                     onServerClick = {},
                     onRefresh = {},
                     onRetry = {},
+                    onLockClick = {},
                 )
             }
         }
@@ -77,10 +81,12 @@ class ServersScreenContentTest {
                     uiState = UiState.Error(UiText.resource(R.string.error_request_failed)),
                     hubOverview = null,
                     isRefreshing = false,
+                    isPasswordLockEnabled = false,
                     onNavigateToSettings = {},
                     onServerClick = {},
                     onRefresh = {},
                     onRetry = { retryCalled = true },
+                    onLockClick = {},
                 )
             }
         }
@@ -102,10 +108,12 @@ class ServersScreenContentTest {
                     uiState = UiState.Success(servers),
                     hubOverview = null,
                     isRefreshing = false,
+                    isPasswordLockEnabled = false,
                     onNavigateToSettings = {},
                     onServerClick = {},
                     onRefresh = {},
                     onRetry = {},
+                    onLockClick = {},
                 )
             }
         }
@@ -123,10 +131,12 @@ class ServersScreenContentTest {
                     uiState = UiState.Success(emptyList()),
                     hubOverview = null,
                     isRefreshing = false,
+                    isPasswordLockEnabled = false,
                     onNavigateToSettings = {},
                     onServerClick = {},
                     onRefresh = {},
                     onRetry = {},
+                    onLockClick = {},
                 )
             }
         }
@@ -144,10 +154,12 @@ class ServersScreenContentTest {
                     uiState = UiState.Loading,
                     hubOverview = null,
                     isRefreshing = false,
+                    isPasswordLockEnabled = false,
                     onNavigateToSettings = { navigateCalled = true },
                     onServerClick = {},
                     onRefresh = {},
                     onRetry = {},
+                    onLockClick = {},
                 )
             }
         }
@@ -167,10 +179,12 @@ class ServersScreenContentTest {
                     uiState = UiState.Success(listOf(server)),
                     hubOverview = null,
                     isRefreshing = false,
+                    isPasswordLockEnabled = false,
                     onNavigateToSettings = {},
                     onServerClick = { clickedServer = it },
                     onRefresh = {},
                     onRetry = {},
+                    onLockClick = {},
                 )
             }
         }
