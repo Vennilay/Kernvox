@@ -52,6 +52,7 @@ data class AppSettings(
     val autoLockTimeout: AutoLockTimeout = AutoLockTimeout.FIVE_MINUTES,
     val isPasswordLockEnabled: Boolean = false,
     val isBiometricUnlockEnabled: Boolean = false,
+    val isPrivacyModeEnabled: Boolean = false,
 )
 
 /**
@@ -89,6 +90,7 @@ class AppSettingsRepository internal constructor(
             autoLockTimeout = AutoLockTimeout.fromStorageValue(prefs[KEY_AUTO_LOCK_TIMEOUT]),
             isPasswordLockEnabled = prefs[KEY_PASSWORD_HASH] != null,
             isBiometricUnlockEnabled = prefs[KEY_BIOMETRIC_UNLOCK_ENABLED] ?: false,
+            isPrivacyModeEnabled = prefs[KEY_PRIVACY_MODE_ENABLED] ?: false,
         )
     }
 
@@ -149,6 +151,12 @@ class AppSettingsRepository internal constructor(
     suspend fun setBiometricUnlockEnabled(enabled: Boolean) {
         dataStore.edit { prefs ->
             prefs[KEY_BIOMETRIC_UNLOCK_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setPrivacyModeEnabled(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[KEY_PRIVACY_MODE_ENABLED] = enabled
         }
     }
 
@@ -235,6 +243,7 @@ class AppSettingsRepository internal constructor(
         private val KEY_PASSWORD_SALT = stringPreferencesKey("password_salt")
         private val KEY_PASSWORD_HASH = stringPreferencesKey("password_hash")
         private val KEY_BIOMETRIC_UNLOCK_ENABLED = booleanPreferencesKey("biometric_unlock_enabled")
+        private val KEY_PRIVACY_MODE_ENABLED = booleanPreferencesKey("privacy_mode_enabled")
 
         private fun generateSalt(): String {
             val bytes = ByteArray(SALT_LENGTH_BYTES)

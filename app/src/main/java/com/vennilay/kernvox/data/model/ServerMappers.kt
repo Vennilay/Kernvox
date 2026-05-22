@@ -12,7 +12,7 @@ fun DashboardServerDto.toServer(): Server {
         id = id,
         name = name,
         host = host,
-        port = 22,
+        port = port ?: 22,
         isActive = isActive,
         isAvailable = isAvailable,
         cpuPercent = cpuPercent,

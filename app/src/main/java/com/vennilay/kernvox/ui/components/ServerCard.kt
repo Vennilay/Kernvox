@@ -18,11 +18,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -31,8 +34,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vennilay.kernvox.R
 import com.vennilay.kernvox.data.model.Server
+import com.vennilay.kernvox.data.storage.AppSettingsRepository
 import com.vennilay.kernvox.ui.theme.GreenSuccess
 import com.vennilay.kernvox.ui.theme.Spacing
+import com.vennilay.kernvox.ui.utils.PrivacyUtil
 import com.vennilay.kernvox.ui.utils.metricColor
 
 @Composable
@@ -41,6 +46,11 @@ fun ServerCard(
     modifier: Modifier = Modifier,
     onClick: ((Server) -> Unit)? = null,
 ) {
+    val context = LocalContext.current
+    val settingsRepository = remember(context) { AppSettingsRepository(context) }
+    val settings by settingsRepository.settings.collectAsState(initial = null)
+    val isPrivacyMode = settings?.isPrivacyModeEnabled == true
+
     val isOnline = server.isAvailable ?: false
     val noData = stringResource(R.string.server_card_no_data)
     val cpuFormatted = remember(server.cpuPercent, noData) {
@@ -51,6 +61,10 @@ fun ServerCard(
     }
     val diskFormatted = remember(server.diskUsedPercent, noData) {
         server.diskUsedPercent?.let { "%.1f%%".format(it) } ?: noData
+    }
+
+    val displayHost = remember(server.host, isPrivacyMode) {
+        if (isPrivacyMode) PrivacyUtil.maskHost(server.host) else server.host
     }
 
     Card(
@@ -89,7 +103,7 @@ fun ServerCard(
                         overflow = TextOverflow.Ellipsis,
                     )
                     Text(
-                        text = "${server.host}:${server.port}",
+                        text = "$displayHost:${server.port}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,

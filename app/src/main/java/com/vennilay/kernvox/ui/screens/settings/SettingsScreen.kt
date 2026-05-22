@@ -223,6 +223,15 @@ fun SettingsScreen(
                         onAutoLockSelected = viewModel::saveAutoLockTimeout,
                     )
                     Spacer(modifier = Modifier.height(Spacing.md))
+                    SettingsSection(title = stringResource(R.string.settings_privacy_mode_title)) {
+                        SettingsSwitchRow(
+                            title = stringResource(R.string.settings_privacy_mode_title),
+                            subtitle = stringResource(R.string.settings_privacy_mode_subtitle),
+                            checked = currentSettings.isPrivacyModeEnabled,
+                            onCheckedChange = { viewModel.setPrivacyModeEnabled(it) },
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(Spacing.md))
                     AppSection()
                     Spacer(modifier = Modifier.height(Spacing.md))
                 }

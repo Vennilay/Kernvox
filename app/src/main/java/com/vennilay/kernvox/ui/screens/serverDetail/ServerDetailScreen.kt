@@ -77,6 +77,7 @@ import com.vennilay.kernvox.ui.components.ProcessItem
 import com.vennilay.kernvox.ui.components.StatusBadge
 import com.vennilay.kernvox.ui.state.UiState
 import com.vennilay.kernvox.ui.theme.Spacing
+import com.vennilay.kernvox.ui.utils.PrivacyUtil
 import com.vennilay.kernvox.ui.utils.formatBytes
 import com.vennilay.kernvox.ui.utils.formatTimestamp
 import com.vennilay.kernvox.ui.utils.formatUptime
@@ -102,6 +103,7 @@ fun ServerDetailScreen(
         AppSettingsRepository(context.applicationContext)
     }
     val settings by settingsRepository.settings.collectAsState(initial = null)
+    val isPrivacyMode = settings?.isPrivacyModeEnabled == true
     val activity = remember(context) { context.findFragmentActivity() }
 
     val uiState by viewModel.uiState.collectAsState()
@@ -212,6 +214,7 @@ fun ServerDetailScreen(
                                     0 -> OverviewTab(
                                         server = state.data,
                                         isRebooting = isRebooting,
+                                        isPrivacyMode = isPrivacyMode,
                                         onRebootClick = { showRebootConfirmation = true },
                                     )
                                     1 -> ProcessesTab(
@@ -385,6 +388,7 @@ private fun RebootUnlockDialog(
 private fun OverviewTab(
     server: Server,
     isRebooting: Boolean,
+    isPrivacyMode: Boolean,
     onRebootClick: () -> Unit,
 ) {
     val ramUnit = stringResource(R.string.server_detail_ram_unit)
@@ -425,17 +429,24 @@ private fun OverviewTab(
         }
         Spacer(modifier = Modifier.height(Spacing.lg))
 
+        val displayHost = remember(server.host, isPrivacyMode) {
+            if (isPrivacyMode) PrivacyUtil.maskHost(server.host) else server.host
+        }
+
         InfoTile(
             label = stringResource(R.string.server_detail_address),
-            value = "${server.host}:${server.port}",
+            value = "$displayHost:${server.port}",
             icon = R.drawable.ic_location,
         )
         Spacer(modifier = Modifier.height(Spacing.sm))
 
         server.username?.let { username ->
+            val displayUsername = remember(username, isPrivacyMode) {
+                if (isPrivacyMode) PrivacyUtil.maskUsername(username) else username
+            }
             InfoTile(
                 label = stringResource(R.string.server_detail_username),
-                value = username,
+                value = displayUsername,
                 icon = R.drawable.ic_server_placeholder,
             )
             Spacer(modifier = Modifier.height(Spacing.sm))

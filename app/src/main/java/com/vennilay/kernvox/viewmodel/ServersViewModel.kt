@@ -3,6 +3,7 @@ package com.vennilay.kernvox.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.vennilay.kernvox.auth.AppLockSessionHolder
 import com.vennilay.kernvox.data.model.HubOverview
 import com.vennilay.kernvox.data.model.Server
 import com.vennilay.kernvox.data.model.toHubOverview
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -46,6 +48,10 @@ class ServersViewModel(
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
+    val isPasswordLockEnabled: StateFlow<Boolean> = settingsRepository.settings
+        .map { it.isPasswordLockEnabled }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     private var currentSettings = AppSettings()
     private var loadJob: Job? = null
 
@@ -56,14 +62,10 @@ class ServersViewModel(
     private fun observeSettings() {
         viewModelScope.launch {
             settingsRepository.settings
+                .onEach { settings -> currentSettings = settings }
                 .map { ConnectionSettings(it.serverUrl, it.apiKey, it.actionKey) }
                 .distinctUntilChanged()
                 .collect { connectionSettings ->
-                    currentSettings = currentSettings.copy(
-                        serverUrl = connectionSettings.serverUrl,
-                        apiKey = connectionSettings.apiKey,
-                        actionKey = connectionSettings.actionKey,
-                    )
                     val hasConfig = connectionSettings.serverUrl.isNotBlank() &&
                         connectionSettings.apiKey.isNotBlank()
 
@@ -116,6 +118,12 @@ class ServersViewModel(
         super.onCleared()
         loadJob?.cancel()
         serversRepository?.close()
+    }
+
+    fun lockApp() {
+        if (currentSettings.isPasswordLockEnabled) {
+            AppLockSessionHolder.session.markLocked()
+        }
     }
 
     private data class ConnectionSettings(
