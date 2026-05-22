@@ -32,6 +32,7 @@
     <string name="servers_error_title">Не удалось загрузить серверы</string>
     <string name="servers_retry">Повторить</string>
     <string name="servers_refresh_cd">Обновить</string>
+    <string name="servers_lock_cd">Заблокировать</string>
     <string name="servers_settings_cd">Настройки</string>
 
     <!-- Server Card -->
@@ -132,6 +133,8 @@
     <string name="settings_saved_ok">✓ Настройки сохранены</string>
     <string name="settings_section_appearance">Внешний вид</string>
     <string name="settings_section_security">Безопасность</string>
+    <string name="settings_privacy_mode_title">Режим скрытности</string>
+    <string name="settings_privacy_mode_subtitle">Скрывать IP-адреса и имена пользователей в интерфейсе</string>
     <string name="settings_section_app">Приложение</string>
     <string name="settings_section_api">Серверы и API</string>
     <string name="settings_theme_title">Тема приложения</string>

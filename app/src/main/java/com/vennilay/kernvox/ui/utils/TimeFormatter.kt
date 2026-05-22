@@ -1,8 +1,12 @@
 package com.vennilay.kernvox.ui.utils
 
-import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Locale
-import java.util.TimeZone
+
+private val outputFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm", Locale.getDefault())
+    .withZone(ZoneId.systemDefault())
 
 /**
  * Форматирует время аптайма из секунд в читаемый формат.
@@ -27,9 +31,7 @@ fun formatUptime(
 }
 
 /**
- * Форматирует ISO-8601 timestamp в читаемый формат.
- * Пример входа: "2026-04-07T18:47:11.844222Z"
- * Пример выхода: "07.04.2026 21:47" (локальное время)
+ * Форматирует байты в читаемый формат (КБ, МБ, ГБ).
  */
 fun formatBytes(
     bytes: Float?,
@@ -48,23 +50,15 @@ fun formatBytes(
     }
 }
 
+/**
+ * Форматирует ISO-8601 timestamp в читаемый формат.
+ * Пример входа: "2026-04-07T18:47:11.844222Z"
+ * Пример выхода: "07.04.2026 21:47" (локальное время)
+ */
 fun formatTimestamp(isoTimestamp: String): String {
     return try {
-        val trimmed = if (isoTimestamp.contains(".")) {
-            val base = isoTimestamp.substringBefore(".")
-            val frac = isoTimestamp.substringAfter(".").replace("Z", "")
-            val ms = frac.take(3).padStart(3, '0')
-            "$base.$ms"
-        } else {
-            isoTimestamp.replace("Z", "")
-        }
-
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US).apply {
-            timeZone = TimeZone.getTimeZone("UTC")
-        }
-        val date = inputFormat.parse(trimmed) ?: return isoTimestamp
-        val outputFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-        outputFormat.format(date)
+        val instant = Instant.parse(isoTimestamp)
+        outputFormatter.format(instant)
     } catch (e: Exception) {
         isoTimestamp
     }

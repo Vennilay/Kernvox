@@ -65,6 +65,7 @@ class SettingsViewModel(
                         autoLockTimeout = previousSettings?.autoLockTimeout ?: AutoLockTimeout.FIVE_MINUTES,
                         isPasswordLockEnabled = previousSettings?.isPasswordLockEnabled ?: false,
                         isBiometricUnlockEnabled = previousSettings?.isBiometricUnlockEnabled ?: false,
+                        isPrivacyModeEnabled = previousSettings?.isPrivacyModeEnabled ?: false,
                     )
                 )
             } catch (e: Exception) {
@@ -139,6 +140,13 @@ class SettingsViewModel(
 
     fun notifyBiometricEnableRejected() {
         _messages.tryEmit(UiText.resource(R.string.settings_biometric_not_enabled))
+    }
+
+    fun setPrivacyModeEnabled(enabled: Boolean) {
+        updateSettings { settings ->
+            settingsRepository.setPrivacyModeEnabled(enabled)
+            settings.copy(isPrivacyModeEnabled = enabled)
+        }
     }
 
     private fun updateSettings(block: suspend (AppSettings) -> AppSettings) {

@@ -78,6 +78,7 @@ fun ServersScreen(
     val uiState by viewModel.uiState.collectAsState()
     val hubOverview by viewModel.hubOverview.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
+    val isPasswordLockEnabled by viewModel.isPasswordLockEnabled.collectAsState()
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
@@ -91,6 +92,8 @@ fun ServersScreen(
                 scrollBehavior = scrollBehavior,
                 onNavigateToSettings = onNavigateToSettings,
                 hubOverview = hubOverview,
+                isPasswordLockEnabled = isPasswordLockEnabled,
+                onLockClick = viewModel::lockApp,
             )
         },
     ) { paddingValues ->
@@ -173,6 +176,8 @@ private fun ServersTopAppBar(
     scrollBehavior: androidx.compose.material3.TopAppBarScrollBehavior,
     onNavigateToSettings: () -> Unit,
     hubOverview: HubOverview?,
+    isPasswordLockEnabled: Boolean,
+    onLockClick: () -> Unit,
 ) {
     TopAppBar(
         title = {
@@ -205,6 +210,14 @@ private fun ServersTopAppBar(
             }
         },
         actions = {
+            if (isPasswordLockEnabled) {
+                IconButton(onClick = onLockClick) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_lock),
+                        contentDescription = stringResource(R.string.servers_lock_cd),
+                    )
+                }
+            }
             IconButton(onClick = onNavigateToSettings) {
                 Icon(
                     painter = painterResource(R.drawable.ic_settings),

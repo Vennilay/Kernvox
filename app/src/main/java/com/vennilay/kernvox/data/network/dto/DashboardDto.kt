@@ -8,6 +8,7 @@ data class DashboardServerDto(
     val id: Int,
     val name: String,
     val host: String,
+    val port: Int? = null,
     @SerialName("is_active") val isActive: Boolean,
     @SerialName("is_available") val isAvailable: Boolean?,
     @SerialName("cpu_percent") val cpuPercent: Float?,
