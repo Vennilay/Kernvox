@@ -16,6 +16,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -79,11 +81,12 @@ fun ErrorContent(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
+                    modifier = Modifier.semantics { testTag = "error_message" },
                 )
                 Spacer(modifier = Modifier.height(Spacing.md))
                 KernvoxButton(
                     onClick = onRetry,
-                    modifier = Modifier.widthIn(max = 220.dp),
+                    modifier = Modifier.widthIn(max = 220.dp).semantics { testTag = "error_retry_button" },
                 ) {
                     Text(retryLabel)
                 }
