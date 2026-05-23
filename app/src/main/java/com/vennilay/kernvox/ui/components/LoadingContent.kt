@@ -8,6 +8,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 
 @Composable
 fun LoadingContent(
@@ -20,6 +22,6 @@ fun LoadingContent(
             .padding(paddingValues),
         contentAlignment = Alignment.Center,
     ) {
-        CircularProgressIndicator()
+        CircularProgressIndicator(modifier = Modifier.semantics { testTag = "loading_indicator" })
     }
 }

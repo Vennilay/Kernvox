@@ -33,4 +33,55 @@ class ApiErrorMapperTest {
             userFriendlyApiMessageRes("Сервер не найден."),
         )
     }
+
+    @Test
+    fun mapsNullAndBlankToRequestFailed() {
+        assertEquals(R.string.error_request_failed, userFriendlyApiMessageRes(null))
+        assertEquals(R.string.error_request_failed, userFriendlyApiMessageRes(""))
+        assertEquals(R.string.error_request_failed, userFriendlyApiMessageRes("   "))
+    }
+
+    @Test
+    fun mapsForbiddenToForbiddenError() {
+        assertEquals(R.string.error_forbidden, userFriendlyApiMessageRes("Forbidden"))
+        assertEquals(R.string.error_forbidden, userFriendlyApiMessageRes("403 Forbidden"))
+    }
+
+    @Test
+    fun mapsTooManyRequestsToRateLimitError() {
+        assertEquals(R.string.error_too_many_requests, userFriendlyApiMessageRes("Too Many Requests"))
+        assertEquals(R.string.error_too_many_requests, userFriendlyApiMessageRes("Слишком много запросов"))
+    }
+
+    @Test
+    fun mapsConnectionErrorsToConnectionFailed() {
+        assertEquals(R.string.error_connection_failed, userFriendlyApiMessageRes("Connection timeout"))
+        assertEquals(R.string.error_connection_failed, userFriendlyApiMessageRes("Request timed out"))
+        assertEquals(R.string.error_connection_failed, userFriendlyApiMessageRes("Connection refused"))
+        assertEquals(R.string.error_connection_failed, userFriendlyApiMessageRes("Failed to connect"))
+    }
+
+    @Test
+    fun mapsServiceUnavailableToUnavailableError() {
+        assertEquals(R.string.error_service_unavailable, userFriendlyApiMessageRes("Service Unavailable"))
+        assertEquals(R.string.error_service_unavailable, userFriendlyApiMessageRes("Temporarily Unavailable"))
+    }
+
+    @Test
+    fun mapsSerializationErrorsToFormatError() {
+        assertEquals(R.string.error_response_format, userFriendlyApiMessageRes("Unexpected JSON token"))
+        assertEquals(R.string.error_response_format, userFriendlyApiMessageRes("Serialization failed"))
+    }
+
+    @Test
+    fun throwableExtensionDelegatesToMessageMapping() {
+        val exception = RuntimeException("Invalid API key")
+        assertEquals(R.string.error_invalid_api_key, exception.toUserFriendlyMessageRes())
+    }
+
+    @Test
+    fun throwableExtensionUsesDefaultResIdForUnknownErrors() {
+        val exception = RuntimeException("Some internal error with no mapping")
+        assertEquals(R.string.error_request_failed, exception.toUserFriendlyMessageRes())
+    }
 }

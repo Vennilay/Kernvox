@@ -31,6 +31,8 @@
     <string name="servers_last_checked_label">Проверен</string>
     <string name="servers_error_title">Не удалось загрузить серверы</string>
     <string name="servers_retry">Повторить</string>
+    <string name="servers_not_configured_title">Хаб не подключён</string>
+    <string name="servers_open_settings">Открыть настройки</string>
     <string name="servers_refresh_cd">Обновить</string>
     <string name="servers_lock_cd">Заблокировать</string>
     <string name="servers_settings_cd">Настройки</string>

@@ -45,6 +45,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -80,6 +82,34 @@ fun ServersScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isPasswordLockEnabled by viewModel.isPasswordLockEnabled.collectAsState()
 
+    ServersScreenContent(
+        uiState = uiState,
+        hubOverview = hubOverview,
+        isRefreshing = isRefreshing,
+        isPasswordLockEnabled = isPasswordLockEnabled,
+        onNavigateToSettings = onNavigateToSettings,
+        onServerClick = onServerClick,
+        onRefresh = { viewModel.loadServers() },
+        onRetry = { viewModel.loadServers() },
+        onLockClick = viewModel::lockApp,
+        modifier = modifier,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun ServersScreenContent(
+    uiState: UiState<List<Server>>,
+    hubOverview: HubOverview?,
+    isRefreshing: Boolean,
+    isPasswordLockEnabled: Boolean,
+    onNavigateToSettings: () -> Unit,
+    onServerClick: (Server) -> Unit,
+    onRefresh: () -> Unit,
+    onRetry: () -> Unit,
+    onLockClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     Scaffold(
@@ -93,7 +123,7 @@ fun ServersScreen(
                 onNavigateToSettings = onNavigateToSettings,
                 hubOverview = hubOverview,
                 isPasswordLockEnabled = isPasswordLockEnabled,
-                onLockClick = viewModel::lockApp,
+                onLockClick = onLockClick,
             )
         },
     ) { paddingValues ->
@@ -105,20 +135,30 @@ fun ServersScreen(
             when (state) {
                 is UiState.Loading -> LoadingContent(paddingValues = paddingValues)
 
-                is UiState.Error -> ErrorContent(
-                    title = stringResource(R.string.servers_error_title),
-                    message = state.message.asString(),
-                    retryLabel = stringResource(R.string.servers_retry),
-                    onRetry = { viewModel.loadServers() },
-                    paddingValues = paddingValues,
-                )
+                is UiState.Error -> {
+                    val isNotConfigured =
+                        state.message.resId == R.string.error_missing_connection_settings
+                    ErrorContent(
+                        title = stringResource(
+                            if (isNotConfigured) R.string.servers_not_configured_title
+                            else R.string.servers_error_title,
+                        ),
+                        message = state.message.asString(),
+                        retryLabel = stringResource(
+                            if (isNotConfigured) R.string.servers_open_settings
+                            else R.string.servers_retry,
+                        ),
+                        onRetry = if (isNotConfigured) onNavigateToSettings else onRetry,
+                        paddingValues = paddingValues,
+                    )
+                }
 
                 is UiState.Success -> {
                     val servers = state.data
                     val locale = LocalLocale.current.platformLocale
                     PullToRefreshBox(
                         isRefreshing = isRefreshing,
-                        onRefresh = { viewModel.loadServers() },
+                        onRefresh = onRefresh,
                         state = rememberPullToRefreshState(),
                         modifier = Modifier
                             .fillMaxSize()
@@ -127,7 +167,8 @@ fun ServersScreen(
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(horizontal = Spacing.md),
+                                .padding(horizontal = Spacing.md)
+                                .semantics { testTag = "servers_list" },
                             verticalArrangement = Arrangement.spacedBy(10.dp),
                             contentPadding = PaddingValues(vertical = Spacing.sm),
                         ) {
@@ -218,7 +259,10 @@ private fun ServersTopAppBar(
                     )
                 }
             }
-            IconButton(onClick = onNavigateToSettings) {
+            IconButton(
+                onClick = onNavigateToSettings,
+                modifier = Modifier.semantics { testTag = "settings_button" },
+            ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_settings),
                     contentDescription = stringResource(R.string.servers_settings_cd),
