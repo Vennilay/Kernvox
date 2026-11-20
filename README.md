@@ -1,425 +1,382 @@
+<a id="top"></a>
+
+<div align="center">
+
 # Kernvox
+
+**Мобильный Android-клиент для мониторинга и управления серверной инфраструктурой**  
+*Mobile Android client for server infrastructure monitoring and control*
+
+<p>
+  <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin" />
+  <img src="https://img.shields.io/badge/Jetpack_Compose-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose" />
+  <img src="https://img.shields.io/badge/Android-API%2024%2B-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android API 24+" />
+  <img src="https://img.shields.io/badge/Samsung_Academy-Project-1428A0?style=flat-square" alt="Samsung Academy" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-2EA44F?style=flat-square" alt="MIT License" /></a>
+</p>
+
+<p>
+  <a href="#readme-ru"><strong>🇷🇺 Русская версия</strong></a>
+  &nbsp;•&nbsp;
+  <a href="#readme-en"><strong>🇬🇧 English version</strong></a>
+  &nbsp;•&nbsp;
+  <a href="https://github.com/Vennilay/KernvoxHub"><strong>🔗 KernvoxHub (Backend)</strong></a>
+</p>
+
+<br />
 
 <img width="1672" height="941" alt="Kernvox Android application screenshot" src="https://github.com/user-attachments/assets/b851cbda-e268-4c82-8e62-1e30db06bfc4" />
 
-<a id="language"></a>
-## Language / Язык
-
-Choose the documentation language before reading / Выберите язык документации перед чтением:
-
-- 🇷🇺 [Русская версия](#readme-ru)
-- 🇬🇧 [English version](#readme-en)
+</div>
 
 ---
 
 <a id="readme-ru"></a>
-# Kernvox — Android-клиент для мониторинга серверов
+# 🇷🇺 Kernvox — Android-клиент для мониторинга серверов
 
-Kernvox — Android-приложение для системных администраторов и DevOps-инженеров. Приложение подключается к серверному хабу KernvoxHub, получает данные через REST API и показывает состояние серверной инфраструктуры в мобильном интерфейсе.
+**Kernvox** — нативное Android-приложение для системных администраторов и DevOps-инженеров, которое позволяет за пару секунд проверить состояние серверов с телефона, не открывая полноценный веб-дашборд или SSH-терминал на компьютере.
 
-Проект разработан в рамках Samsung Academy.
+Проект разработан в рамках **Samsung Academy** и работает в паре с серверным хабом [**KernvoxHub**](https://github.com/Vennilay/KernvoxHub).
 
-**Связанные репозитории:**
+<p align="center">
+  <a href="#ru-how-it-works">Как это работает</a> ·
+  <a href="#ru-features">Возможности</a> ·
+  <a href="#ru-architecture">Архитектура и стек</a> ·
+  <a href="#ru-security">Безопасность и API</a> ·
+  <a href="#ru-setup">Запуск и сборка</a> ·
+  <a href="#ru-status">Статус</a> ·
+  <a href="#ru-authors">Авторы</a> ·
+  <a href="#readme-en">🇬🇧 English</a>
+</p>
 
-- [Kernvox](https://github.com/Vennilay/Kernvox) — Android-клиент, текущий репозиторий.
-- [KernvoxHub](https://github.com/Vennilay/KernvoxHub) — серверный хаб для сбора метрик и предоставления API.
+<a id="ru-how-it-works"></a>
+## Как это работает
 
-## Содержание
+Приложению не нужны прямые SSH-доступы к каждому серверу — вся инфраструктура разделена на два независимых слоя:
 
-- [О проекте](#ru-about)
-- [Задача проекта](#ru-purpose)
-- [Возможности](#ru-features)
-- [Архитектура](#ru-architecture)
-- [API KernvoxHub](#ru-api)
-- [Технологии](#ru-tech-stack)
-- [Установка и запуск](#ru-setup)
-- [Сборка и тесты](#ru-build)
-- [Безопасность](#ru-security)
-- [Статус и ограничения](#ru-status)
-- [Лицензия](#ru-license)
-- [Контакты](#ru-contacts)
-- 🇬🇧 [English version](#readme-en)
+```text
+┌──────────────────────┐       сбор метрик       ┌──────────────────┐       REST / JSON       ┌──────────────────┐
+│  Ваши серверы / VPS  │ ◄─────────────────────► │    KernvoxHub    │ ──────────────────────► │     Kernvox      │
+│  (CPU, RAM, процессы)│    выполнение команд    │  серверный хаб   │ ◄────────────────────── │  Android-клиент  │
+└──────────────────────┘                         └──────────────────┘   X-API-Key / Action    └──────────────────┘
+```
 
-<a id="ru-about"></a>
-## О проекте
+1. **[KernvoxHub](https://github.com/Vennilay/KernvoxHub)** выступает единой точкой сбора: он опрашивает подключённые серверы, агрегирует метрики, хранит их историю и выполняет административные команды.
+2. **Kernvox** (это приложение) подключается к хабу по REST API, отображает живое состояние узлов в интерфейсе Material 3 и отправляет защищённые действия (например, перезагрузку сервера).
 
-Kernvox помогает быстро оценить состояние серверов без открытия полноценной системы мониторинга на рабочем компьютере. Основной сценарий: администратор открывает приложение, видит список узлов, их доступность и ключевые метрики, а затем при необходимости переходит к деталям конкретного сервера.
-
-Приложение не собирает метрики самостоятельно. Этим занимается KernvoxHub. Android-клиент отвечает за подключение к хабу, получение данных, отображение статусов и выполнение защищенных действий через API.
-
-<a id="ru-purpose"></a>
-## Задача проекта
-
-Проект решает практическую задачу мобильного наблюдения за небольшой серверной инфраструктурой:
-
-- показать, какие серверы доступны прямо сейчас;
-- отобразить CPU, RAM, диск, сеть, аптайм и время последней метрики;
-- дать доступ к списку процессов и истории метрик;
-- позволить отправить команду перезагрузки через KernvoxHub;
-- хранить ключи подключения и настройки приложения безопасно на устройстве.
+Такая схема избавляет телефон от хранения чувствительных ключей ко всем узлам и позволяет централизованно управлять списком серверов на стороне бэкенда.
 
 <a id="ru-features"></a>
 ## Возможности
 
-- Экран приветствия для первого запуска.
-- Настройка адреса KernvoxHub, API-ключа и отдельного ключа действия.
-- Список серверов с онлайн/оффлайн-статусом и краткими метриками.
-- Pull-to-refresh для ручного обновления данных.
-- Детальный экран сервера с вкладками "Обзор", "Процессы" и "История".
-- Отображение CPU, RAM, диска, сети, аптайма, адреса и пользователя.
-- Просмотр процессов сервера, если данные доступны через KernvoxHub.
-- История метрик сервера.
-- Отправка команды перезагрузки сервера с подтверждением.
-- Светлая, темная и системная темы.
-- Локальная блокировка приложения паролем.
-- Биометрическая разблокировка, если она доступна на устройстве.
-- Автоблокировка после возврата в приложение.
-- Режим скрытности для маскирования IP-адресов и имен пользователей.
-- Пользовательские сообщения об ошибках сети, авторизации и API.
+**Мониторинг и управление**
+- **Сводка по инфраструктуре:** список всех серверов с онлайн/оффлайн-статусами, ключевыми показателями и ручным обновлением (pull-to-refresh).
+- **Детальная карточка узла:** три вкладки — **«Обзор»** (CPU, RAM, диск, сеть, аптайм, адрес, пользователь и время последней метрики), **«Процессы»** и **«История»**.
+- **Безопасная перезагрузка:** отправка команды reboot через KernvoxHub с отдельным ключом доступа и дополнительным диалогом подтверждения.
+
+**Интерфейс и приватность**
+- **Режим скрытности (Privacy Mode):** маскирует IP-адреса и имена пользователей в интерфейсе, если приложением приходится пользоваться в публичном месте или на демонстрации.
+- **Комфортный UX:** экран первичной настройки при первом запуске, поддержка светлой, тёмной и системной тем, понятные сообщения об ошибках сети, авторизации и API.
+
+**Локальная защита**
+- **Блокировка приложения:** локальный пароль, опциональная биометрическая разблокировка (отпечаток / Face ID) и автоматическая блокировка при возврате в приложение.
 
 <a id="ru-architecture"></a>
-## Архитектура
+## Архитектура и технологии
 
-Проект состоит из двух компонентов: серверного хаба и Android-клиента.
+Приложение построено по паттерну **MVVM** с чётким разделением слоёв:
 
 ```text
-┌─────────────────┐        REST / JSON        ┌─────────────────┐
-│   KernvoxHub    │ ────────────────────────> │     Kernvox     │
-│  server backend │                           │ Android client  │
-└─────────────────┘                           └─────────────────┘
-        │                                             │
-        │ collects metrics                            │ displays data
-        │ and runs actions                            │ and user actions
-        ▼                                             ▼
- monitored servers                              mobile interface
+app/src/main/java/com/vennilay/kernvox/
+├── ui/              # Экраны и переиспользуемые компоненты Jetpack Compose
+├── viewmodel/       # Состояние экранов (UI State) и обработка действий пользователя
+├── data/
+│   ├── network/     # Ktor-клиент (OkHttp), сериализация и вызовы API
+│   ├── repository/  # Слой доступа к данным и маппинг моделей
+│   └── storage/     # Preferences DataStore и шифрование секретов
+└── auth/            # Локальная блокировка, проверка пароля и биометрия
 ```
 
-Внутри Android-приложения используется MVVM-подход:
+| Область | Технологии |
+| :--- | :--- |
+| **Язык и UI** | Kotlin, Jetpack Compose, Material 3, Navigation Compose |
+| **Сеть и данные** | Ktor Client (OkHttp), `kotlinx.serialization`, Preferences DataStore |
+| **Безопасность** | Android Keystore, AES/GCM/NoPadding, PBKDF2, AndroidX Biometric |
+| **Сборка и SDK** | Gradle Kotlin DSL, Min SDK 24 (Android 7.0), Target/Compile SDK 36, Java 11 bytecode |
 
-- `ui` — экраны и компоненты Jetpack Compose;
-- `viewmodel` — состояние экранов и обработка пользовательских действий;
-- `data/repository` — слой доступа к данным;
-- `data/network` — Ktor-клиент и вызовы API;
-- `data/storage` — DataStore, настройки и безопасное хранение секретов;
-- `auth` — блокировка приложения и биометрия.
+> Актуальные версии всех зависимостей перечислены в `gradle/libs.versions.toml`.
 
-<a id="ru-api"></a>
-## API KernvoxHub
+<a id="ru-security"></a>
+## Безопасность и API KernvoxHub
 
-Android-клиент ожидает, что KernvoxHub предоставляет следующие эндпоинты:
+### Модель защиты данных
+- **Два раздельных ключа API:** для чтения метрик используется заголовок `X-API-Key`, а для опасных действий (перезагрузки) — отдельный `X-Action-Key`. Приложение может работать в режиме «только чтение», если ключ действия не задан.
+- **Шифрование секретов:** оба ключа хранятся в Preferences DataStore строго в зашифрованном виде (`AES/GCM/NoPadding`) с мастер-ключом внутри **Android Keystore**.
+- **Хранение пароля:** локальный пароль блокировки не сохраняется в открытом виде — используются случайная соль (salt) и хэш **PBKDF2**. Биометрия работает только поверх включённого пароля.
+- **Защита транспорта и копий:** в release-сборке для обычных серверов требуется **HTTPS**, а системный **Android Backup отключён**, чтобы секреты и настройки не попадали в облачные бэкапы.
 
-| Метод | Эндпоинт | Назначение |
-| --- | --- | --- |
-| `GET` | `/api/v1/android/dashboard` | Сводка по всем серверам |
-| `GET` | `/api/v1/android/servers/{id}/details` | Детальная информация о сервере |
-| `GET` | `/api/v1/android/servers/{id}/processes?limit=50` | Список процессов сервера |
-| `GET` | `/api/v1/android/servers/{id}/metrics/history?limit=100` | История метрик |
-| `POST` | `/api/v1/servers/{id}/actions/reboot` | Команда перезагрузки сервера |
+### Ожидаемые эндпоинты KernvoxHub
 
-Для чтения данных используется заголовок `X-API-Key`. Для опасных действий, например перезагрузки, используется отдельный заголовок `X-Action-Key`.
-
-<a id="ru-tech-stack"></a>
-## Технологии
-
-| Область | Используется |
-| --- | --- |
-| Язык | Kotlin |
-| UI | Jetpack Compose, Material 3 |
-| Навигация | Navigation Compose |
-| Архитектура | MVVM |
-| Сеть | Ktor Client, OkHttp |
-| JSON | kotlinx.serialization |
-| Хранение настроек | Preferences DataStore |
-| Безопасность | Android Keystore, AES/GCM, PBKDF2 |
-| Биометрия | AndroidX Biometric |
-| Сборка | Gradle Kotlin DSL |
-| Минимальная версия Android | API 24, Android 7.0 |
-| Target / Compile SDK | API 36 |
-| JVM bytecode | Java 11 |
-
-Основные версии зависимостей находятся в `gradle/libs.versions.toml`.
+| Метод | Эндпоинт | Заголовок | Назначение |
+| :---: | :--- | :---: | :--- |
+| `GET` | `/api/v1/android/dashboard` | `X-API-Key` | Сводка по всем серверам |
+| `GET` | `/api/v1/android/servers/{id}/details` | `X-API-Key` | Подробная информация об узле |
+| `GET` | `/api/v1/android/servers/{id}/processes?limit=50` | `X-API-Key` | Список активных процессов |
+| `GET` | `/api/v1/android/servers/{id}/metrics/history?limit=100` | `X-API-Key` | История собранных метрик |
+| `POST` | `/api/v1/servers/{id}/actions/reboot` | `X-Action-Key` | Перезагрузка сервера |
 
 <a id="ru-setup"></a>
-## Установка и запуск
+## Установка, запуск и сборка
 
 ### Требования
+- **Android Studio** с поддержкой актуального Android Gradle Plugin
+- **JDK 17** и **Android SDK Platform 36**
+- Устройство или эмулятор с **Android 7.0 (API 24)** или выше
+- Развёрнутый экземпляр **[KernvoxHub](https://github.com/Vennilay/KernvoxHub)** с настроенным `X-API-Key`
 
-- Android Studio с поддержкой актуального Android Gradle Plugin.
-- JDK 17 для сборки проекта.
-- Android SDK Platform 36.
-- Эмулятор или устройство с Android 7.0, API 24, или новее.
-- Запущенный KernvoxHub с настроенным API-ключом.
-
-### Клонирование
+### Быстрый старт
 
 ```bash
 git clone https://github.com/Vennilay/Kernvox.git
 cd Kernvox
 ```
 
-### Запуск в Android Studio
+1. Откройте папку проекта в **Android Studio** и дождитесь завершения Gradle Sync.
+2. Запустите приложение на эмуляторе или физическом устройстве.
+3. На экране настроек укажите URL вашего **KernvoxHub** и `X-API-Key` (и при необходимости `X-Action-Key` для перезагрузки серверов).
 
-1. Откройте проект в Android Studio.
-2. Дождитесь Gradle Sync.
-3. Запустите приложение на эмуляторе или физическом устройстве.
-4. На экране настроек укажите URL KernvoxHub и `X-API-Key`.
-5. При необходимости укажите `X-Action-Key` для перезагрузки серверов.
+> [!TIP]
+> Для подключения к локальному KernvoxHub из Android Emulator используйте адрес `http://10.0.2.2:<port>`. HTTP разрешён для debug-сборок и локальных адресов разработки; в release-сборке для внешних серверов обязателен HTTPS.
 
-Для локального KernvoxHub в Android Emulator обычно используется адрес вида `http://10.0.2.2:<port>`. HTTP разрешен для debug-сборок и локальных адресов разработки. В release-сборке для обычных серверов требуется HTTPS.
-
-<a id="ru-build"></a>
-## Сборка и тесты
+### Команды Gradle
 
 | Команда | Назначение |
-| --- | --- |
+| :--- | :--- |
 | `./gradlew assembleDebug` | Собрать debug APK |
-| `./gradlew installDebug` | Установить debug APK на подключенное устройство |
-| `./gradlew assembleRelease` | Собрать release APK с R8/ProGuard |
+| `./gradlew installDebug` | Установить debug APK на подключённое устройство |
+| `./gradlew assembleRelease` | Собрать release APK (включены R8/ProGuard и shrink resources) |
 | `./gradlew test` | Запустить unit-тесты |
-| `./gradlew connectedAndroidTest` | Запустить instrumentation-тесты на устройстве или эмуляторе |
-| `./gradlew clean` | Очистить build-артефакты |
-
-Release-сборка включает минификацию и shrink resources.
-
-<a id="ru-security"></a>
-## Безопасность
-
-- API-ключ и ключ действия сохраняются в Preferences DataStore только в зашифрованном виде.
-- Шифрование секретов выполняется через AES/GCM/NoPadding.
-- AES-ключ создается и хранится в Android Keystore.
-- Пароль локальной блокировки не хранится открытым текстом: сохраняются случайный salt и PBKDF2-хеш.
-- Биометрия используется только как дополнительный способ разблокировки после включения пароля.
-- Перезагрузка сервера требует отдельного ключа действия и дополнительного подтверждения.
-- В release-сборке обычные подключения к KernvoxHub должны использовать HTTPS.
-- Android backup отключен, чтобы настройки и секреты приложения не попадали в резервные копии.
+| `./gradlew connectedAndroidTest` | Запустить instrumentation- и Compose UI-тесты на устройстве/эмуляторе |
+| `./gradlew clean` | Очистить артефакты сборки |
 
 <a id="ru-status"></a>
 ## Статус и ограничения
 
-Текущая версия готова для демонстрации как Android-клиент мониторинга: приложение подключается к KernvoxHub, отображает список серверов, детали, процессы, историю метрик и поддерживает защищенную отправку команды перезагрузки.
+Приложение полностью работоспособно как мобильный клиент мониторинга для **KernvoxHub**: доступны просмотр сводки, деталей узлов, процессов, истории метрик, режим приватности, локальная защита и перезагрузка серверов.
 
-Ограничения текущей версии:
+**Текущие ограничения:**
+- добавление и редактирование серверов выполняется на стороне **KernvoxHub**, а не в мобильном приложении;
+- графики, группировка серверов и экспорт данных пока не реализованы;
+- для работы требуется запущенный сервер **KernvoxHub**.
 
-- серверы добавляются и редактируются на стороне KernvoxHub, а не в Android-приложении;
-- графики, группировка серверов и экспорт данных не реализованы;
-- для полноценной работы требуется развернутый KernvoxHub.
+<a id="ru-authors"></a>
+## Авторы и участники
 
-<a id="ru-license"></a>
+Проект создан и поддерживается в рамках **Samsung Academy**:
+
+<table>
+  <tr>
+    <td align="center" width="220">
+      <a href="https://github.com/Vennilay">
+        <img src="https://github.com/Vennilay.png?size=100" width="90" height="90" alt="Vennilay" /><br />
+        <strong>Vennilay</strong>
+      </a><br />
+      <sub>Архитектура · Безопасность & Keystore · Интеграция API · CI/CD · Документация</sub>
+    </td>
+    <td align="center" width="220">
+      <a href="https://github.com/BAALOC">
+        <img src="https://github.com/BAALOC.png?size=100" width="90" height="90" alt="Makar Leonardov" /><br />
+        <strong>Makar Leonardov</strong>
+      </a><br />
+      <sub>UI-компоненты Compose · Рефакторинг · Unit & Compose UI-тесты</sub>
+    </td>
+  </tr>
+</table>
+
+<p>
+  <a href="https://github.com/Vennilay/Kernvox/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=Vennilay/Kernvox" alt="Contributors" />
+  </a>
+</p>
+
 ## Лицензия
 
-Проект распространяется по лицензии MIT. Текст лицензии находится в файле [LICENSE](LICENSE).
+Проект распространяется под лицензией **MIT** — подробности в файле [LICENSE](LICENSE).
 
-<a id="ru-contacts"></a>
-## Контакты
-
-- GitHub: [Vennilay/Kernvox](https://github.com/Vennilay/Kernvox)
-- Связанный проект: [Vennilay/KernvoxHub](https://github.com/Vennilay/KernvoxHub)
-
-🇷🇺 [К выбору языка](#language)
+[⬆️ Наверх](#top) · [🇬🇧 Перейти к английской версии](#readme-en)
 
 ---
 
 <a id="readme-en"></a>
-# Kernvox — Android Server Monitoring Client
+# 🇬🇧 Kernvox — Android Server Monitoring Client
 
-Kernvox is an Android application for system administrators and DevOps engineers. The app connects to the KernvoxHub backend, reads server data through a REST API, and displays infrastructure status in a mobile interface.
+**Kernvox** is a native Android application for system administrators and DevOps engineers that lets you check server health in seconds right from your phone—without opening a full monitoring dashboard or SSH client on a workstation.
 
-The project was developed as part of Samsung Academy.
+Developed as part of **Samsung Academy**, Kernvox works alongside the [**KernvoxHub**](https://github.com/Vennilay/KernvoxHub) backend service.
 
-**Related repositories:**
+<p align="center">
+  <a href="#en-how-it-works">How It Works</a> ·
+  <a href="#en-features">Features</a> ·
+  <a href="#en-architecture">Architecture & Stack</a> ·
+  <a href="#en-security">Security & API</a> ·
+  <a href="#en-setup">Setup & Build</a> ·
+  <a href="#en-status">Status</a> ·
+  <a href="#en-authors">Authors</a> ·
+  <a href="#readme-ru">🇷🇺 Русский</a>
+</p>
 
-- [Kernvox](https://github.com/Vennilay/Kernvox) — Android client, this repository.
-- [KernvoxHub](https://github.com/Vennilay/KernvoxHub) — backend hub that collects metrics and exposes the API.
+<a id="en-how-it-works"></a>
+## How It Works
 
-## Contents
+Your phone never needs direct SSH access to every server. The system is intentionally split into two decoupled components:
 
-- [About](#en-about)
-- [Project Purpose](#en-purpose)
-- [Features](#en-features)
-- [Architecture](#en-architecture)
-- [KernvoxHub API](#en-api)
-- [Tech Stack](#en-tech-stack)
-- [Setup and Run](#en-setup)
-- [Build and Tests](#en-build)
-- [Security](#en-security)
-- [Status and Limitations](#en-status)
-- [License](#en-license)
-- [Contacts](#en-contacts)
-- 🇷🇺 [Русская версия](#readme-ru)
+```text
+┌──────────────────────┐     collects metrics    ┌──────────────────┐       REST / JSON       ┌──────────────────┐
+│  Your Servers / VPS  │ ◄─────────────────────► │    KernvoxHub    │ ──────────────────────► │     Kernvox      │
+│  (CPU, RAM, procs)   │      runs actions       │  server backend  │ ◄────────────────────── │  Android client  │
+└──────────────────────┘                         └──────────────────┘   X-API-Key / Action    └──────────────────┘
+```
 
-<a id="en-about"></a>
-## About
+1. **[KernvoxHub](https://github.com/Vennilay/KernvoxHub)** acts as the central hub: it polls your servers, collects and stores metrics, and executes server actions.
+2. **Kernvox** (this app) connects to the hub over a REST API, renders real-time server status in a Material 3 interface, and triggers protected actions such as server reboots.
 
-Kernvox helps administrators quickly check server health without opening a full monitoring dashboard on a workstation. The main workflow is simple: open the app, review the server list, check availability and key metrics, then open server details when more context is needed.
-
-The app does not collect metrics directly. KernvoxHub handles metric collection. The Android client is responsible for hub connection, data loading, status visualization, and protected API actions.
-
-<a id="en-purpose"></a>
-## Project Purpose
-
-The project solves a practical mobile monitoring task for small server infrastructures:
-
-- show which servers are currently available;
-- display CPU, RAM, disk, network, uptime, and the last metric timestamp;
-- provide access to server processes and metric history;
-- send a reboot command through KernvoxHub;
-- store connection keys and app settings safely on the device.
+This keeps infrastructure credentials off your mobile device and lets you manage monitored nodes centrally on the backend.
 
 <a id="en-features"></a>
 ## Features
 
-- First-launch welcome screen.
-- Configuration for KernvoxHub URL, API key, and separate action key.
-- Server list with online/offline status and short metrics.
-- Pull-to-refresh for manual data updates.
-- Server detail screen with Overview, Processes, and History tabs.
-- Display of CPU, RAM, disk, network, uptime, address, and username.
-- Server process list when available through KernvoxHub.
-- Server metric history.
-- Reboot command with confirmation.
-- Light, dark, and system theme modes.
-- Local app lock with password.
-- Biometric unlock when supported by the device.
-- Auto-lock after returning to the app.
-- Privacy mode for masking IP addresses and usernames.
-- User-friendly handling of network, authorization, and API errors.
+**Monitoring & Control**
+- **Infrastructure dashboard:** live server list with online/offline statuses, key metrics at a glance, and pull-to-refresh.
+- **Detailed server view:** three tabs — **Overview** (CPU, RAM, disk, network, uptime, host address, username, and last metric timestamp), **Processes**, and **History**.
+- **Protected reboot:** trigger server reboots via KernvoxHub guarded by a separate action key and an explicit confirmation dialog.
+
+**Interface & Privacy**
+- **Privacy Mode:** masks IP addresses and usernames on screen so you can safely check servers in public or during demos.
+- **Clean UX:** guided first-launch onboarding, light/dark/system themes, and clear user-facing error handling for network, auth, and API failures.
+
+**On-Device Protection**
+- **App lock:** local password protection, optional biometric unlock (fingerprint / face), and automatic lock when returning to the app.
 
 <a id="en-architecture"></a>
-## Architecture
+## Architecture & Tech Stack
 
-The project consists of two components: the backend hub and the Android client.
+The Android app follows a clean **MVVM** layout:
 
 ```text
-┌─────────────────┐        REST / JSON        ┌─────────────────┐
-│   KernvoxHub    │ ────────────────────────> │     Kernvox     │
-│  server backend │                           │ Android client  │
-└─────────────────┘                           └─────────────────┘
-        │                                             │
-        │ collects metrics                            │ displays data
-        │ and runs actions                            │ and user actions
-        ▼                                             ▼
- monitored servers                              mobile interface
+app/src/main/java/com/Vennilay/kernvox/
+├── ui/              # Jetpack Compose screens and reusable Material 3 components
+├── viewmodel/       # Screen UI state and user action handling
+├── data/
+│   ├── network/     # Ktor HTTP client (OkHttp), serialization, and API calls
+│   ├── repository/  # Data access layer and domain mappers
+│   └── storage/     # Preferences DataStore and encrypted secret storage
+└── auth/            # Local app lock, password verification, and biometrics
 ```
 
-The Android app follows an MVVM-style structure:
+| Layer | Technologies |
+| :--- | :--- |
+| **Language & UI** | Kotlin, Jetpack Compose, Material 3, Navigation Compose |
+| **Networking & Storage** | Ktor Client (OkHttp), `kotlinx.serialization`, Preferences DataStore |
+| **Security** | Android Keystore, AES/GCM/NoPadding, PBKDF2, AndroidX Biometric |
+| **Build & SDK** | Gradle Kotlin DSL, Min SDK 24 (Android 7.0), Target/Compile SDK 36, Java 11 bytecode |
 
-- `ui` — Jetpack Compose screens and components;
-- `viewmodel` — screen state and user action handling;
-- `data/repository` — data access layer;
-- `data/network` — Ktor client and API calls;
-- `data/storage` — DataStore, settings, and secure secret storage;
-- `auth` — app lock and biometric authentication.
+> Dependency versions are centrally managed in `gradle/libs.versions.toml`.
 
-<a id="en-api"></a>
-## KernvoxHub API
+<a id="en-security"></a>
+## Security & KernvoxHub API
 
-The Android client expects KernvoxHub to expose these endpoints:
+### Security Model
+- **Separated API keys:** read-only requests authenticate with `X-API-Key`, while sensitive actions (like rebooting) require a dedicated `X-Action-Key`. Leave the action key empty to run the client strictly in read-only mode.
+- **Encrypted secret storage:** both keys are encrypted with `AES/GCM/NoPadding` using a key generated and held inside **Android Keystore** before being written to Preferences DataStore.
+- **Password & biometrics:** the local lock password is never stored in plain text—only a random salt and **PBKDF2** hash are persisted. Biometrics act strictly as an unlock convenience on top of password lock.
+- **Transport & backup hardening:** release builds enforce **HTTPS** for standard server hosts, and **Android Backup is disabled** so keys and settings never leak into cloud backups.
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| `GET` | `/api/v1/android/dashboard` | Dashboard summary for all servers |
-| `GET` | `/api/v1/android/servers/{id}/details` | Detailed server information |
-| `GET` | `/api/v1/android/servers/{id}/processes?limit=50` | Server process list |
-| `GET` | `/api/v1/android/servers/{id}/metrics/history?limit=100` | Metric history |
-| `POST` | `/api/v1/servers/{id}/actions/reboot` | Server reboot command |
+### Expected KernvoxHub Endpoints
 
-Read requests use the `X-API-Key` header. Dangerous actions, such as reboot, use a separate `X-Action-Key` header.
-
-<a id="en-tech-stack"></a>
-## Tech Stack
-
-| Area | Used |
-| --- | --- |
-| Language | Kotlin |
-| UI | Jetpack Compose, Material 3 |
-| Navigation | Navigation Compose |
-| Architecture | MVVM |
-| Networking | Ktor Client, OkHttp |
-| JSON | kotlinx.serialization |
-| Settings storage | Preferences DataStore |
-| Security | Android Keystore, AES/GCM, PBKDF2 |
-| Biometrics | AndroidX Biometric |
-| Build system | Gradle Kotlin DSL |
-| Minimum Android version | API 24, Android 7.0 |
-| Target / Compile SDK | API 36 |
-| JVM bytecode | Java 11 |
-
-Main dependency versions are defined in `gradle/libs.versions.toml`.
+| Method | Endpoint | Header | Purpose |
+| :---: | :--- | :---: | :--- |
+| `GET` | `/api/v1/android/dashboard` | `X-API-Key` | Dashboard summary for all servers |
+| `GET` | `/api/v1/android/servers/{id}/details` | `X-API-Key` | Detailed server metrics & metadata |
+| `GET` | `/api/v1/android/servers/{id}/processes?limit=50` | `X-API-Key` | Running server processes |
+| `GET` | `/api/v1/android/servers/{id}/metrics/history?limit=100` | `X-API-Key` | Historical server metrics |
+| `POST` | `/api/v1/servers/{id}/actions/reboot` | `X-Action-Key` | Server reboot action |
 
 <a id="en-setup"></a>
-## Setup and Run
+## Setup, Run & Build
 
 ### Requirements
+- **Android Studio** supporting the current Android Gradle Plugin
+- **JDK 17** and **Android SDK Platform 36**
+- Physical device or emulator running **Android 7.0 (API 24)** or newer
+- A running **[KernvoxHub](https://github.com/Vennilay/KernvoxHub)** instance with a configured `X-API-Key`
 
-- Android Studio with support for the current Android Gradle Plugin.
-- JDK 17 for building the project.
-- Android SDK Platform 36.
-- Emulator or physical device with Android 7.0, API 24, or newer.
-- Running KernvoxHub instance with a configured API key.
-
-### Clone
+### Quick Start
 
 ```bash
 git clone https://github.com/Vennilay/Kernvox.git
 cd Kernvox
 ```
 
-### Run in Android Studio
+1. Open the project in **Android Studio** and wait for Gradle Sync to complete.
+2. Run the app on an emulator or physical device.
+3. Open **Settings** and provide your **KernvoxHub** URL and `X-API-Key` (plus `X-Action-Key` if you want to enable server reboots).
 
-1. Open the project in Android Studio.
-2. Wait for Gradle Sync to finish.
-3. Run the app on an emulator or a physical device.
-4. Open Settings and enter the KernvoxHub URL and `X-API-Key`.
-5. Optionally enter `X-Action-Key` to enable server reboot actions.
+> [!TIP]
+> When connecting to a local KernvoxHub instance from the Android Emulator, use `http://10.0.2.2:<port>`. HTTP is permitted for debug builds and local development hosts; release builds require HTTPS for regular server URLs.
 
-For a local KernvoxHub running from the Android Emulator, use a URL like `http://10.0.2.2:<port>`. HTTP is allowed for debug builds and local development hosts. Release builds require HTTPS for normal server URLs.
+### Gradle Commands
 
-<a id="en-build"></a>
-## Build and Tests
-
-| Command | Purpose |
-| --- | --- |
+| Command | Description |
+| :--- | :--- |
 | `./gradlew assembleDebug` | Build debug APK |
 | `./gradlew installDebug` | Install debug APK on a connected device |
-| `./gradlew assembleRelease` | Build release APK with R8/ProGuard |
+| `./gradlew assembleRelease` | Build release APK (R8/ProGuard minification & resource shrinking enabled) |
 | `./gradlew test` | Run unit tests |
-| `./gradlew connectedAndroidTest` | Run instrumentation tests on a device or emulator |
+| `./gradlew connectedAndroidTest` | Run instrumentation & Compose UI tests on a device/emulator |
 | `./gradlew clean` | Clean build artifacts |
 
-Release builds enable code minification and resource shrinking.
-
-<a id="en-security"></a>
-## Security
-
-- The API key and action key are stored in Preferences DataStore only in encrypted form.
-- Secret encryption uses AES/GCM/NoPadding.
-- The AES key is generated and stored in Android Keystore.
-- The local app-lock password is never stored as plain text: the app stores a random salt and a PBKDF2 hash.
-- Biometrics are used only as an additional unlock method after password lock is enabled.
-- Server reboot requires a separate action key and an extra confirmation step.
-- Release builds require HTTPS for regular KernvoxHub connections.
-- Android backup is disabled so app settings and secrets are not included in backups.
-
 <a id="en-status"></a>
-## Status and Limitations
+## Status & Limitations
 
-The current version is ready to demonstrate as an Android monitoring client: it connects to KernvoxHub, shows the server list, details, processes, metric history, and supports protected reboot commands.
+Kernvox is ready for demonstration and everyday monitoring with **KernvoxHub**, covering dashboard status, server details, processes, metric history, privacy mode, local lock, and protected reboots.
 
-Current limitations:
+**Current limitations:**
+- servers are added and managed on the **KernvoxHub** side rather than inside the mobile app;
+- charts, server grouping, and data export are not yet implemented;
+- a deployed **KernvoxHub** instance is required for full functionality.
 
-- servers are added and edited through KernvoxHub, not inside the Android app;
-- charts, server grouping, and data export are not implemented;
-- a deployed KernvoxHub instance is required for full functionality.
+<a id="en-authors"></a>
+## Authors & Contributors
 
-<a id="en-license"></a>
+Created and maintained as part of **Samsung Academy**:
+
+<table>
+  <tr>
+    <td align="center" width="220">
+      <a href="https://github.com/Vennilay">
+        <img src="https://github.com/Vennilay.png?size=100" width="90" height="90" alt="Vennilay" /><br />
+        <strong>Vennilay</strong>
+      </a><br />
+      <sub>Architecture · Security & Keystore · API Integration · CI/CD · Docs</sub>
+    </td>
+    <td align="center" width="220">
+      <a href="https://github.com/BAALOC">
+        <img src="https://github.com/BAALOC.png?size=100" width="90" height="90" alt="Makar Leonardov" /><br />
+        <strong>Makar Leonardov</strong>
+      </a><br />
+      <sub>Compose UI Components · Refactoring · Unit & Compose UI Tests</sub>
+    </td>
+  </tr>
+</table>
+
+<p>
+  <a href="https://github.com/Vennilay/Kernvox/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=Vennilay/Kernvox" alt="Contributors" />
+  </a>
+</p>
+
 ## License
 
-The project is distributed under the MIT License. See [LICENSE](LICENSE) for details.
+Distributed under the **MIT License** — see [LICENSE](LICENSE) for details.
 
-<a id="en-contacts"></a>
-## Contacts
-
-- GitHub: [Vennilay/Kernvox](https://github.com/Vennilay/Kernvox)
-- Related project: [Vennilay/KernvoxHub](https://github.com/Vennilay/KernvoxHub)
-
-🇬🇧 [Back to language selection](#language)
+[⬆️ Back to top](#top) · [🇷🇺 Switch to Russian](#readme-ru)
